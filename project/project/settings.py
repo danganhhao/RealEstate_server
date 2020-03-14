@@ -32,6 +32,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # My apps
+    'api',
+    'user',
 
     # Default apps of django
     'django.contrib.admin',
@@ -89,7 +91,7 @@ WSGI_APPLICATION = 'project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'anhhao$realestate',
+        'NAME': 'realestate',
         'USER': 'realestate',
         'PASSWORD': '123456',
         'HOST': 'localhost',
@@ -146,4 +148,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = u"/home/anhhao/Documents/Data/LuanVan/realestate/project/static"
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
+# Media Files
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+MEDIA_URL = '/media/'

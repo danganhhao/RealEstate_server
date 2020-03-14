@@ -1,0 +1,8 @@
+USER_EXIST = 'username is existed'
+EMAIL_EXIST = 'email is registered'
+ERROR_CODE = 'error_code'
+ERROR_MESSAGE = 'error_message'
+CONTENT_TYPE_JSON = 'application/json'
+REQUEST = 'request'
+TYPE = 'type'
+ID = 'id'
