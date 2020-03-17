@@ -9,8 +9,8 @@ We'll declare a serializer that we can use to serialize and deserialize an objec
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        # fields = '__all__'
-        fields = ['id', 'name', 'password', 'address', 'phoneNumber', 'emailAddress', 'identifyNumber']
+        # fields = ('username', 'email')
+        fields = '__all__'
 
     # name = serializers.CharField(max_length=100)
     # username = serializers.CharField(max_length=50, unique=True)
