@@ -97,11 +97,18 @@ WSGI_APPLICATION = 'project.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'realestate',
-        'USER': 'realestate',
+        'NAME': 'newrealestate',
+        'USER': 'root',
         'PASSWORD': '123456',
         'HOST': 'localhost',
         'PORT': '3306',
+        'OPTIONS': {
+            'sql_mode': 'TRADITIONAL',
+            'charset': 'utf8',
+            'init_command': 'SET '
+                'character_set_connection=utf8,'
+                'collation_connection=utf8_bin'
+        }
     }
 }
 

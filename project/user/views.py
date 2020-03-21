@@ -7,20 +7,20 @@ from user.helper.authentication import Authentication
 from user.helper.check_info import is_username_exist, is_email_exist
 from django.contrib.auth.hashers import make_password, check_password
 from user.helper.json import *
+from user.helper.token import create_token
 from user.models import *
-
 
 # Create your views here.
 from user.serializers import UserSerializer
 
 
 class UserInfo(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    /user/
+    Receive: 
+    """
 
-    parser_classes = (MultiPartParser, )
-    """
-    user/register
-    Receive:
-    """
     def get(self, request):
         user = User.objects.all()
         serializer = UserSerializer(user, many=True)
@@ -30,10 +30,10 @@ class UserInfo(APIView):
 
         # --------------- Check Admin Token for permission -------------
 
-        error_header, status_code = Authentication().authentication(request, type_token='admin')
-
-        if error_header['error_code']:
-            return create_json_response(error_header, error_header, status_code=status_code)
+        # error_header, status_code = Authentication().authentication(request, type_token='admin')
+        #
+        # if error_header['error_code']:
+        #     return create_json_response(error_header, error_header, status_code=status_code)
 
         # --------------- Register Flow --------------------------------
         # json_data = json.loads(request.body.decode('utf-8'))
@@ -80,4 +80,45 @@ class UserInfo(APIView):
         except Exception as e:
             print(e)
             error_header = {'error_code': 100, 'error_message': 'Something went wrong - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class Login(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    user/login
+    :usage  API receive username, password
+    :return Json response
+    """
+
+    def post(self, request):
+        ## Check permission
+        try:
+            json_data = request.data
+            username = json_data['username']
+            password = json_data['password']
+
+            try:
+                user = User.objects.get(username=username)
+                if check_password(password, user.password):
+                    json_response = create_token(model_instance=user, model_type='user')
+                    json_response['username'] = user.username
+
+                    error_header = {'error_code': 0, 'error_message': 'success'}
+                    return create_json_response(json_response, error_header, status_code=200)
+
+                else:
+                    error_header = {'error_code': 11, 'error_message': 'Login fail'}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+            except User.DoesNotExist:
+                error_header = {'error_code': 11, 'error_message': 'Login fail'}
+                return create_json_response(error_header, error_header, status_code=200)
+        except KeyError:
+            error_header = {'error_code': 11, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': 100, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)

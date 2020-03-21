@@ -10,7 +10,7 @@ urlpatterns = [
     # url(r'^$', views.index, name='index'),
 
     # user url
-    path('user/', UserInfo.as_view(), name='list_user')
-    # path('user/', userinfo)
+    path('user/', UserInfo.as_view(), name='user'),
+    path('user/login/', Login.as_view(), name='login')
 
 ]

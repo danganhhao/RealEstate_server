@@ -1,5 +1,9 @@
 from django.contrib import admin
 
+"""
+    Custom view of admin page
+"""
+
 
 class UserDisplay(admin.ModelAdmin):
     list_display = ('username', 'email', 'name', 'gender')
