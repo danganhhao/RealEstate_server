@@ -28,10 +28,10 @@ class EstateType(models.Model):
 
 # EstateStatus table (ex: bought, sold,...)
 class EstateStatus(models.Model):
-    status = models.BooleanField()
+    status = models.CharField(max_length=50)
 
     def __str__(self):
-        return self.status.name
+        return self.status
 
 
 # Project table: describe a project information, include: name, invesloper, constructor,...)
@@ -45,8 +45,8 @@ class Project(models.Model):
 # Type transaction table: buy or sell
 class TransactionType(models.Model):
     TYPE = (
-        ('B', 'Buy'),
-        ('S', 'Sell')
+        ('Mua', 'Mua'),
+        ('Bán', 'Bán')
     )
     name = models.CharField(max_length=30, choices=TYPE)
 
@@ -69,7 +69,7 @@ class District(models.Model):
     id = models.IntegerField(primary_key=True, unique=True)
     name = models.CharField(max_length=100, null=True)
     prefix = models.CharField(max_length=20, null=True)
-    province_id = models.ForeignKey(Province, on_delete=models.CASCADE)
+    province_id = models.ForeignKey(Province, related_name='districts', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
@@ -80,8 +80,8 @@ class Ward(models.Model):
     id = models.IntegerField(primary_key=True, unique=True)
     name = models.CharField(max_length=50, null=True)
     prefix = models.CharField(max_length=20, null=True)
-    province_id = models.ForeignKey(Province, on_delete=models.CASCADE)
-    district_id = models.ForeignKey(District, on_delete=models.CASCADE)
+    province_id = models.ForeignKey(Province, related_name='wards', on_delete=models.CASCADE)
+    district_id = models.ForeignKey(District, related_name='wards', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
@@ -92,8 +92,8 @@ class Street(models.Model):
     id = models.IntegerField(primary_key=True, unique=True)
     name = models.CharField(max_length=100, null=True)
     prefix = models.CharField(max_length=20, null=True)
-    province_id = models.ForeignKey(Province, on_delete=models.CASCADE)
-    district_id = models.ForeignKey(District, on_delete=models.CASCADE)
+    province_id = models.ForeignKey(Province, related_name='streets', on_delete=models.CASCADE)
+    district_id = models.ForeignKey(District, related_name='streets', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.name
@@ -104,8 +104,7 @@ class Estate(models.Model):
     title = models.CharField(max_length=200)
     estateType = models.ForeignKey(EstateType, on_delete=models.CASCADE)
     estateStatus = models.ForeignKey(EstateStatus, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    transaction = models.ForeignKey(TransactionType, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True)
     province = models.ForeignKey(Province, on_delete=models.CASCADE, null=True, blank=True)
     district = models.ForeignKey(District, on_delete=models.CASCADE, null=True, blank=True)
     ward = models.ForeignKey(Ward, on_delete=models.CASCADE, null=True, blank=True)
@@ -126,6 +125,7 @@ class Estate(models.Model):
 class Post(models.Model):
     user = models.ForeignKey('user.User', on_delete=models.CASCADE)
     estate = models.ForeignKey(Estate, on_delete=models.CASCADE)
+    transaction = models.ForeignKey(TransactionType, on_delete=models.CASCADE, null=True)
     dateFrom = models.DateTimeField()
     dateTo = models.DateTimeField()
 

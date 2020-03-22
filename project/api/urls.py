@@ -1,13 +1,13 @@
 from django.conf.urls import url
 from django.urls import path
 
-from api.views import StreetInfo
+from api.views import *
 
 urlpatterns = [
     # default homepage
     # url(r'^$', views.index, name='index'),
 
     # user url
-    path('street/', StreetInfo.as_view(), name='street'),
+    path('location/', LocationInfo.as_view(), name='location'),
 
 ]

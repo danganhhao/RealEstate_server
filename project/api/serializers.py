@@ -26,28 +26,37 @@ class TransactionTypeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProvinceSerializer(serializers.ModelSerializer):
+class StreetSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Province
-        fields = '__all__'
-
-
-class DistrictSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = District
-        fields = '__all__'
+        model = Street
+        fields = ('id', 'name', 'prefix')
+        # fields = '__all__'
 
 
 class WardSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ward
-        fields = '__all__'
+        fields = ('id', 'name', 'prefix')
+        # fields = '__all__'
 
 
-class StreetSerializer(serializers.ModelSerializer):
+class DistrictSerializer(serializers.ModelSerializer):
+    wards = WardSerializer(many=True, read_only=True)
+    streets = StreetSerializer(many=True, read_only=True)
+
     class Meta:
-        model = Street
-        fields = '__all__'
+        model = District
+        fields = ['id', 'name', 'wards', 'streets']
+        # fields = '__all__'
+
+
+class ProvinceSerializer(serializers.ModelSerializer):
+    districts = DistrictSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Province
+        fields = ['id', 'name', 'code', 'districts']
+        # fields = '__all__'
 
 
 class EstateSerializer(serializers.ModelSerializer):

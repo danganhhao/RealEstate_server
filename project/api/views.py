@@ -10,23 +10,21 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
-from api.models import Street
-from api.serializers import StreetSerializer
+from api.models import Province
+from api.serializers import ProvinceSerializer
 
 
-class StreetInfo(APIView):
+class LocationInfo(APIView):
     parser_classes = (MultiPartParser,)
     """
-    /user/
-    Receive: 
     """
 
     def get(self, request):
-        user = Street.objects.all()
+        user = Province.objects.all()
         # user = Street.objects.filter(
         #     Q(province_id='1'),
         #     Q(district_id='1')
         # )
-        # user = Street.objects.get(province_id='1')
-        serializer = StreetSerializer(user, many=True)
+        # user = Province.objects.get(id='1')
+        serializer = ProvinceSerializer(user, many=True)
         return Response(serializer.data)
