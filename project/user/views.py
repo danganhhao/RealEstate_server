@@ -1,17 +1,23 @@
+import os
 from datetime import datetime, timedelta
+
+from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
 from user.helper.authentication import Authentication
-from user.helper.check_info import is_username_exist, is_email_exist
+from user.helper.utils import is_username_exist, is_email_exist, is_image_size_valid, is_image_aspect_ratio_valid
 from django.contrib.auth.hashers import make_password, check_password
+from django.conf import settings
 from user.helper.json import *
 from user.helper.token import create_token
 from user.models import *
 
 # Create your views here.
 from user.serializers import UserSerializer
+
+IMAGE_SIZE_MAX_BYTES = 1024 * 1024 * 2  # 2MB
 
 
 class UserInfo(APIView):
@@ -23,7 +29,7 @@ class UserInfo(APIView):
 
     def get(self, request):
         user = User.objects.all()
-        serializer = UserSerializer(user, many=True)
+        serializer = UserSerializer(user, context={"request": request}, many=True)
         return Response(serializer.data)
 
     def post(self, request):
@@ -46,7 +52,7 @@ class UserInfo(APIView):
         email = json_data['email']
         birthday = datetime.strptime(json_data['birthday'], '%d/%m/%Y')
         address = json_data['address']
-        # avatar = json_data['avatar']
+        avatar = json_data['avatar']
         phoneNumber = json_data['phoneNumber']
         identifyNumber = json_data['identifyNumber']
 
@@ -60,26 +66,45 @@ class UserInfo(APIView):
                 email=email,
                 birthday=birthday,
                 address=address,
-                # avatar=avatar,
+                avatar=avatar,
                 phoneNumber=phoneNumber,
                 identifyNumber=identifyNumber,
             )
 
             if is_username_exist(user.username):
-                error_header = {'error_code': 2, 'error_message': 'username existed'}
+                error_header = {'error_code': EC_USERNAME_EXIST, 'error_message': EM_USERNAME_EXIST}
                 return create_json_response(error_header, error_header, status_code=200)
             elif is_email_exist(user.email):
-                error_header = {'error_code': 3, 'error_message': 'email existed'}
+                error_header = {'error_code': EC_EMAIL_EXIST, 'error_message': EM_EMAIL_EXIST}
                 return create_json_response(error_header, error_header, status_code=200)
 
-            user.save()
+            url = os.path.join(settings.MEDIA_ROOT, str(avatar))
+            storage = FileSystemStorage(location=url)
 
-            error_header = {'error_code': 0, 'error_message': 'success'}
+            with storage.open('', 'wb+') as destination:
+                for chunk in avatar.chunks():
+                    destination.write(chunk)
+                destination.close()
+
+            # Check image size
+            if not is_image_size_valid(url, IMAGE_SIZE_MAX_BYTES):
+                os.remove(url)
+                error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
+                return create_json_response(error_header, error_header, status_code=200)
+
+            # Check image aspect ratio
+            if not is_image_aspect_ratio_valid(url):
+                os.remove(url)
+                error_header = {'error_code': EC_IMAGE_RATIO, 'error_message': EM_IMAGE_RATIO}
+                return create_json_response(error_header, error_header, status_code=200)
+            os.remove(url)
+            user.save()
+            error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS }
             return create_json_response(error_header, error_header, status_code=200)
 
         except Exception as e:
             print(e)
-            error_header = {'error_code': 100, 'error_message': 'Something went wrong - ' + str(e)}
+            error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
 

@@ -1,13 +1,11 @@
 from django.db import models
-from django.db.models import Q
-
 
 # Create your models here.
 
 # Generate media path to upload image
 def uploadLocation(instance, filename, **kwargs):
-    filePath = 'user/{user_id}/{filename}'.format(
-        user_id=str(instance.name.id), filename=filename
+    filePath = 'user/{user_name}/{filename}'.format(
+        user_name=str(instance.username), filename=filename
     )
     return filePath
 
@@ -24,7 +22,6 @@ class User(models.Model):
     phoneNumber = models.CharField(max_length=15, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
     identifyNumber = models.CharField(max_length=15, null=True, blank=True)
-    # user_id = models.CharField(max_length=500, null=True)
 
     def __str__(self):
         return self.name
