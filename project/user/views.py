@@ -1,19 +1,23 @@
 import os
-from datetime import datetime, timedelta
+from random import randint
+from datetime import datetime
 
 from django.core.files.storage import FileSystemStorage
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
-from user.helper.utils import is_username_exist, is_email_exist, is_image_size_valid, is_image_aspect_ratio_valid
+
 from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
+from user.helper.utils import is_username_exist, is_email_exist, is_image_size_valid, is_image_aspect_ratio_valid
 from user.helper.json import *
 from user.helper.token import create_token
-from user.models import *
+from user.helper.email_support import reset_password_email
 from user.helper.utils import get_token
-from user.serializers import UserSerializer, UserTokenSerializer
+from user.models import *
+from user.serializers import UserSerializer
+
 
 # Create your views here.
 
@@ -50,13 +54,17 @@ class UserInfo(APIView):
         password = json_data['password']
         gender = json_data['gender']
         email = json_data['email']
-        birthday = datetime.strptime(json_data['birthday'], '%d/%m/%Y')
         address = json_data['address']
-        avatar = json_data['avatar']
         phoneNumber = json_data['phoneNumber']
         identifyNumber = json_data['identifyNumber']
+        birthday = json_data['birthday']
+        avatar = json_data['avatar']
 
         try:
+            if birthday:
+                birthday = datetime.strptime(birthday, '%d/%m/%Y')
+            else:
+                birthday = datetime.strptime('01/01/1900', '%d/%m/%Y')
 
             user = User(
                 name=name,
@@ -69,6 +77,7 @@ class UserInfo(APIView):
                 avatar=avatar,
                 phoneNumber=phoneNumber,
                 identifyNumber=identifyNumber,
+                pin=randint(100000, 999999)
             )
 
             if is_username_exist(user.username):
@@ -78,26 +87,28 @@ class UserInfo(APIView):
                 error_header = {'error_code': EC_EMAIL_EXIST, 'error_message': EM_EMAIL_EXIST}
                 return create_json_response(error_header, error_header, status_code=200)
 
-            url = os.path.join(settings.MEDIA_ROOT, str(avatar))
-            storage = FileSystemStorage(location=url)
+            if avatar:
+                url = os.path.join(settings.MEDIA_ROOT, str(avatar))
+                storage = FileSystemStorage(location=url)
 
-            with storage.open('', 'wb+') as destination:
-                for chunk in avatar.chunks():
-                    destination.write(chunk)
-                destination.close()
+                with storage.open('', 'wb+') as destination:
+                    for chunk in avatar.chunks():
+                        destination.write(chunk)
+                    destination.close()
 
-            # Check image size
-            if not is_image_size_valid(url, IMAGE_SIZE_MAX_BYTES):
+                # Check image size
+                if not is_image_size_valid(url, IMAGE_SIZE_MAX_BYTES):
+                    os.remove(url)
+                    error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+                # Check image aspect ratio
+                if not is_image_aspect_ratio_valid(url):
+                    os.remove(url)
+                    error_header = {'error_code': EC_IMAGE_RATIO, 'error_message': EM_IMAGE_RATIO}
+                    return create_json_response(error_header, error_header, status_code=200)
                 os.remove(url)
-                error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
-                return create_json_response(error_header, error_header, status_code=200)
 
-            # Check image aspect ratio
-            if not is_image_aspect_ratio_valid(url):
-                os.remove(url)
-                error_header = {'error_code': EC_IMAGE_RATIO, 'error_message': EM_IMAGE_RATIO}
-                return create_json_response(error_header, error_header, status_code=200)
-            os.remove(url)
             user.save()
 
             error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
@@ -171,6 +182,73 @@ class Logout(APIView):
 
             except UserToken.DoesNotExist:
                 error_header = {'error_code': 11, 'error_message': 'Logout fail'}
+                return create_json_response(error_header, error_header, status_code=200)
+        except KeyError:
+            error_header = {'error_code': 11, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': 100, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class ForgotPassword(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    user/forgot
+    :usage  API receive email
+    :return send a PIN code to user email address
+    """
+
+    def post(self, request):
+        try:
+            data = request.data
+            email = data['email']
+            try:
+                user = User.objects.get(email=email)
+                if user.email != "":
+                    reset_password_email(user)
+                    error_header = {'error_code': 0, 'error_message': 'success'}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+            except UserToken.DoesNotExist:
+                error_header = {'error_code': 11, 'error_message': 'fail'}
+                return create_json_response(error_header, error_header, status_code=200)
+        except KeyError:
+            error_header = {'error_code': 11, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': 100, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class ResetPassword(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    user/reset
+    :usage  API receive pin, new password
+    :return status success or failed
+    """
+
+    def post(self, request):
+        try:
+            data = request.data
+            pin = data['pin']
+            password = data['password']
+            try:
+                user = User.objects.get(pin=pin)
+                if user.pin != "":
+                    user.password = make_password(password)
+                    user.pin = randint(100000, 999999)
+                    user.save()
+                    error_header = {'error_code': 0, 'error_message': 'success'}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+            except UserToken.DoesNotExist:
+                error_header = {'error_code': 11, 'error_message': 'fail'}
                 return create_json_response(error_header, error_header, status_code=200)
         except KeyError:
             error_header = {'error_code': 11, 'error_message': 'Missing require fields'}

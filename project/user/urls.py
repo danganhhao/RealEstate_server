@@ -12,6 +12,8 @@ urlpatterns = [
     # user url
     path('user/', UserInfo.as_view(), name='user'),
     path('user/login/', Login.as_view(), name='login'),
-    path('user/logout/', Logout.as_view(), name='logout')
+    path('user/logout/', Logout.as_view(), name='logout'),
+    path('user/forgot/', ForgotPassword.as_view(), name='forgot_password'),
+    path('user/reset/', ResetPassword.as_view(), name='reset_password')
 
 ]

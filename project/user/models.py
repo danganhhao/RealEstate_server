@@ -22,6 +22,7 @@ class User(models.Model):
     phoneNumber = models.CharField(max_length=15, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
     identifyNumber = models.CharField(max_length=15, null=True, blank=True)
+    pin = models.IntegerField(default=000000)
 
     def __str__(self):
         return self.name
