@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, UserToken
 from django.conf import settings
 
 '''
@@ -27,3 +27,9 @@ class UserSerializer(serializers.ModelSerializer):
         else:
             new_url = ""
         return new_url
+
+
+class UserTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserToken
+        fields = '__all__'

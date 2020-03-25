@@ -6,16 +6,16 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
-from user.helper.authentication import Authentication
 from user.helper.utils import is_username_exist, is_email_exist, is_image_size_valid, is_image_aspect_ratio_valid
 from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
 from user.helper.json import *
 from user.helper.token import create_token
 from user.models import *
+from user.helper.utils import get_token
+from user.serializers import UserSerializer, UserTokenSerializer
 
 # Create your views here.
-from user.serializers import UserSerializer
 
 IMAGE_SIZE_MAX_BYTES = 1024 * 1024 * 2  # 2MB
 
@@ -36,7 +36,7 @@ class UserInfo(APIView):
 
         # --------------- Check Admin Token for permission -------------
 
-        # error_header, status_code = Authentication().authentication(request, type_token='admin')
+        # error_header, status_code = Authentication().authentication(request, type_token='user')
         #
         # if error_header['error_code']:
         #     return create_json_response(error_header, error_header, status_code=status_code)
@@ -99,7 +99,8 @@ class UserInfo(APIView):
                 return create_json_response(error_header, error_header, status_code=200)
             os.remove(url)
             user.save()
-            error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS }
+
+            error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
             return create_json_response(error_header, error_header, status_code=200)
 
         except Exception as e:
@@ -112,8 +113,9 @@ class Login(APIView):
     parser_classes = (MultiPartParser,)
     """
     user/login
+    :require token header
     :usage  API receive username, password
-    :return Json response
+    :return token
     """
 
     def post(self, request):
@@ -147,3 +149,35 @@ class Login(APIView):
             print(e)
             error_header = {'error_code': 100, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
+
+
+class Logout(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    user/logout
+    :require token header
+    :usage  API receive username, password
+    :return 
+    """
+
+    def post(self, request):
+        try:
+            token = get_token(request)
+            try:
+                if token:
+                    UserToken.objects.filter(token=token).delete()
+                    error_header = {'error_code': 0, 'error_message': 'success'}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+            except UserToken.DoesNotExist:
+                error_header = {'error_code': 11, 'error_message': 'Logout fail'}
+                return create_json_response(error_header, error_header, status_code=200)
+        except KeyError:
+            error_header = {'error_code': 11, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': 100, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+

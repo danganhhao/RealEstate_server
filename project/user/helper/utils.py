@@ -40,3 +40,7 @@ def is_image_size_valid(img_url, mb_limit):
     if img_size > mb_limit:
         return False
     return True
+
+
+def get_token(request):
+    return request.META.get('HTTP_AUTHORIZATION', b'').replace("Bearer ", "")
