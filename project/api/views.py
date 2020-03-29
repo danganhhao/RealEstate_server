@@ -17,6 +17,7 @@ from api.serializers import *
 from user.helper.authentication import Authentication
 from user.helper.json import create_json_response
 from user.models import *
+from user.helper.string import *
 
 
 class ProvinceInfo(APIView):
@@ -29,13 +30,17 @@ class ProvinceInfo(APIView):
     """
 
     def get(self, request):
-        provinces = Province.objects.all()
-        # user = Street.objects.filter(
-        #     Q(province_id='1'),
-        #     Q(district_id='1')
-        # )
-        serializer = ProvinceSerializer(provinces, many=True)
-        return Response(serializer.data)
+        try:
+            provinces = Province.objects.all()
+            # user = Street.objects.filter(
+            #     Q(province_id='1'),
+            #     Q(district_id='1')
+            # )
+            serializer = ProvinceSerializer(provinces, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
 
 
 class ProvinceDetailInfo(APIView):
@@ -52,9 +57,13 @@ class ProvinceDetailInfo(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
     def get(self, request, id):
-        province = self.get_object(id)
-        serializer = ProvinceSerializer(province)
-        return Response(serializer.data)
+        try:
+            province = self.get_object(id)
+            serializer = ProvinceSerializer(province)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
 
 
 class DistrictDetailInfo(APIView):
@@ -68,14 +77,18 @@ class DistrictDetailInfo(APIView):
         try:
             return District.objects.get(id=d_id, province_id=p_id)
         except District.DoesNotExist:
-            error_header = {'error_code': 0, 'error_message': 'not found'}
+            error_header = {'error_code': EC_FAIL, 'error_message': 'not found'}
             return create_json_response(error_header, error_header, status_code=200)
             # return Response(status=status.HTTP_404_NOT_FOUND)
 
     def get(self, request, p_id, d_id):
-        district = self.get_object(p_id, d_id)
-        serializer = DistrictSerializer(district)
-        return Response(serializer.data)
+        try:
+            district = self.get_object(p_id, d_id)
+            serializer = DistrictSerializer(district)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
 
 
 class EstateTypeInfo(APIView):
@@ -88,9 +101,13 @@ class EstateTypeInfo(APIView):
     """
 
     def get(self, request):
-        estate = EstateType.objects.all()
-        serializer = EstateTypeSerializer(estate, many=True)
-        return Response(serializer.data)
+        try:
+            estate = EstateType.objects.all()
+            serializer = EstateTypeSerializer(estate, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
 
 
 class EstateStatusInfo(APIView):
@@ -103,9 +120,13 @@ class EstateStatusInfo(APIView):
     """
 
     def get(self, request):
-        estate = EstateStatus.objects.all()
-        serializer = EstateStatusSerializer(estate, many=True)
-        return Response(serializer.data)
+        try:
+            estate = EstateStatus.objects.all()
+            serializer = EstateStatusSerializer(estate, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
 
 
 class ProjectInfo(APIView):
@@ -118,9 +139,13 @@ class ProjectInfo(APIView):
     """
 
     def get(self, request):
-        project = Project.objects.all()
-        serializer = ProjectSerializer(project, many=True)
-        return Response(serializer.data)
+        try:
+            project = Project.objects.all()
+            serializer = ProjectSerializer(project, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
 
 
 class TransactionTypeInfo(APIView):
@@ -215,26 +240,27 @@ class PostInfo(APIView):
                 estate_id = estate.id
                 for img_name in images:
                     modified_data = self.modify_input_for_multiple_files(estate_id, img_name)
-                    file_serializer = EstateImageSerializer(data=modified_data)
+                    file_serializer = EstateImageSetterSerializer(data=modified_data)
+                    print(file_serializer)
                     if file_serializer.is_valid():
                         file_serializer.save()
 
                 # ------------------- Create Post ---------------------#
                 #
-                error_header = {'error_code': 0, 'error_message': 'success'}
+                error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
                 return create_json_response(error_header, error_header, status_code=200)
 
             except EstateType.DoesNotExist:
-                error_header = {'error_code': 11, 'error_message': ' fail'}
+                error_header = {'error_code': EC_FAIL, 'error_message': ' fail'}
                 return create_json_response(error_header, error_header, status_code=200)
 
         except KeyError:
-            error_header = {'error_code': 11, 'error_message': 'Missing require fields'}
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
             return create_json_response(error_header, error_header, status_code=200)
 
         except Exception as e:
             print(e)
-            error_header = {'error_code': 100, 'error_message': 'fail - ' + str(e)}
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
 
@@ -247,6 +273,34 @@ class EstateInfo(APIView):
         :return 
     """
     def get(self, request):
-        estate = Estate.objects.all()
-        serializer = EstateSerializer(estate, context={"request": request}, many=True)
-        return Response(serializer.data)
+        try:
+            estate = Estate.objects.all()
+            serializer = EstateSerializer(estate, context={"request": request}, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class EstateDetailInfo(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    .../api/estate/<id>
+    :return get a special estate (Json format) 
+    """
+
+    def get_object(self, id):
+        try:
+            return Estate.objects.get(id=id)
+        except Estate.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, request, id):
+        try:
+            estate = self.get_object(id)
+            serializer = EstateDetailSerializer(estate, context={"request": request})
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+

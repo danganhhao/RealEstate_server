@@ -60,7 +60,14 @@ class ProvinceSerializer(serializers.ModelSerializer):
         # fields = '__all__'
 
 
-class EstateImageSerializer(serializers.ModelSerializer):
+class EstateImageSetterSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = EstateImage
+        fields = '__all__'
+
+
+class EstateImageGetterSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField('validate_image_url')
 
     class Meta:
@@ -81,7 +88,33 @@ class EstateImageSerializer(serializers.ModelSerializer):
 
 
 class EstateSerializer(serializers.ModelSerializer):
-    images = EstateImageSerializer(many=True, read_only=True)
+    images = EstateImageGetterSerializer(many=True, read_only=True)
+    province = serializers.SerializerMethodField('get_province')
+    district = serializers.SerializerMethodField('get_district')
+
+    class Meta:
+        model = Estate
+        fields = ['id', 'title', 'images', 'province', 'district', 'contact']
+
+    # def get_a_image(self, estate):
+    #     img = EstateImage.objects.filter(estate=estate.id).first()
+    #     serializer = EstateImageGetterSerializer(img)
+    #     print(serializer.data)
+    #     return serializer.data['image']
+
+    def get_province(self, estate):
+        if estate.province:
+            return estate.province.name
+        return ""
+
+    def get_district(self, estate):
+        if estate.district:
+            return estate.district.name
+        return ""
+
+
+class EstateDetailSerializer(serializers.ModelSerializer):
+    images = EstateImageGetterSerializer(many=True, read_only=True)  # related_name = images
     estateType = serializers.SerializerMethodField('get_estateType')
     estateStatus = serializers.SerializerMethodField('get_estateStatus')
     project = serializers.SerializerMethodField('get_project')
@@ -93,7 +126,6 @@ class EstateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Estate
         fields = '__all__'
-        # fields = ['id', 'ward', 'images']
 
     def get_estateType(self, estate):
         if estate.estateType:
