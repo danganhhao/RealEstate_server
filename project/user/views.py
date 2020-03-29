@@ -10,6 +10,8 @@ from rest_framework.response import Response
 
 from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
+
+from user.helper.authentication import Authentication
 from user.helper.utils import is_username_exist, is_email_exist, is_image_size_valid, is_image_aspect_ratio_valid
 from user.helper.json import *
 from user.helper.token import create_token
@@ -173,10 +175,17 @@ class Logout(APIView):
 
     def post(self, request):
         try:
-            token = get_token(request)
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code']:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            # token = get_token(request)
+            token = error_header['token']
+            id = error_header['id']
+            print(id)
             try:
-                if token:
-                    UserToken.objects.filter(token=token).delete()
+                if id:
+                    UserToken.objects.filter(user=id).delete()
                     error_header = {'error_code': 0, 'error_message': 'success'}
                     return create_json_response(error_header, error_header, status_code=200)
 

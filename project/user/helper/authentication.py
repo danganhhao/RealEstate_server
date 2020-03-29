@@ -31,13 +31,12 @@ class Authentication(BaseAuthentication):
             credential = {'type': payload['type'], 'error_code': 0, 'error_message': 'Success'}
             # handle token of login user
             if payload['type'] == 'user':
-                user_id = payload['id']
+                username = payload['id']
                 email = payload['email']
 
-                user = User.objects.get(username=user_id, email=email)
-                user_token = user.usertoken_set.get(token=token)
-
-                credential['user_id'] = user.username
+                user = User.objects.get(username=username, email=email)
+                credential['id'] = user.id
+                credential['username'] = user.username
                 credential['token'] = token
             # For admin token
             elif payload['type'] == 'admin' \
@@ -61,7 +60,7 @@ class Authentication(BaseAuthentication):
         auth = get_authorization_header(request).split()
 
         error_code, error_message = 0, 'Success'
-        if not auth or auth[0].lower() != b'token':
+        if not auth:  # todo: check auth[0] header
             error_code = 1
             error_message = "Authentication failed: Can't find the Authentication token."
         elif len(auth) == 1:
