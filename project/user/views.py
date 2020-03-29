@@ -16,7 +16,6 @@ from user.helper.utils import is_username_exist, is_email_exist, is_image_size_v
 from user.helper.json import *
 from user.helper.token import create_token
 from user.helper.email_support import reset_password_email
-from user.helper.utils import get_token
 from user.models import *
 from user.serializers import UserSerializer
 
@@ -30,7 +29,7 @@ class UserInfo(APIView):
     parser_classes = (MultiPartParser,)
     """
     /user/
-    Receive: 
+    Receive:  
     """
 
     def get(self, request):
@@ -126,7 +125,7 @@ class Login(APIView):
     parser_classes = (MultiPartParser,)
     """
     user/login
-    :require token header
+    :
     :usage  API receive username, password
     :return token
     """
@@ -182,11 +181,10 @@ class Logout(APIView):
             # token = get_token(request)
             token = error_header['token']
             id = error_header['id']
-            print(id)
             try:
                 if id:
                     UserToken.objects.filter(user=id).delete()
-                    error_header = {'error_code': 0, 'error_message': 'success'}
+                    error_header = {'error_code': EC_SUCCESS, 'error_message': 'success'}
                     return create_json_response(error_header, error_header, status_code=200)
 
             except UserToken.DoesNotExist:

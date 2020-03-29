@@ -10,8 +10,8 @@ from django.db import models
 
 # Generate media path to upload image
 def uploadLocation(instance, filename, **kwargs):
-    filePath = 'estate/{title_id}/{filename}'.format(
-        title_id=str(instance.title.id), filename=filename
+    filePath = 'estate/{estate_id}/{filename}'.format(
+        estate_id=str(instance.estate), filename=filename
     )
     return filePath
 
@@ -110,7 +110,6 @@ class Estate(models.Model):
     ward = models.ForeignKey(Ward, on_delete=models.CASCADE, null=True, blank=True)
     street = models.ForeignKey(Street, on_delete=models.CASCADE, null=True, blank=True)
     numberOfRoom = models.IntegerField()
-    picture = models.ImageField(upload_to=uploadLocation, null=False, blank=True)
     description = models.TextField(max_length=5000, null=True, blank=True)
     detail = models.TextField(max_length=5000, null=True, blank=True)
     price = models.BigIntegerField()
@@ -118,7 +117,16 @@ class Estate(models.Model):
     contact = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.title
+        return str(self.id)
+
+
+# EstateImage: contain all images of a special estate
+class EstateImage(models.Model):
+    estate = models.ForeignKey(Estate, related_name='images', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=uploadLocation, null=False, blank=True)
+
+    def __str__(self):
+        return self.estate
 
 
 # Post table: when user post a post
