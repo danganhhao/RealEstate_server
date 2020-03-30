@@ -11,7 +11,7 @@ $ pip install django
 $ pip install djangorestframework
 $ pip install -r requirements.txt
 $ cd project
-$ python manager.py runserver
+$ python manage.py runserver
 ```
 ### Window
 
