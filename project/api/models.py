@@ -126,7 +126,7 @@ class EstateImage(models.Model):
     image = models.ImageField(upload_to=uploadLocation, null=False, blank=True)
 
     def __str__(self):
-        return self.estate
+        return str(self.id)
 
 
 # Post table: when user post a post
@@ -138,7 +138,7 @@ class Post(models.Model):
     dateTo = models.DateTimeField()
 
     def __str__(self):
-        return self.estate.name
+        return str(self.estate.id)
 
 
 # Interest table:

@@ -6,6 +6,7 @@ from django.shortcuts import render
 # Create your views here.
 
 import json
+import datetime
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -191,32 +192,48 @@ class PostInfo(APIView):
             user_id = error_header['id']
 
             json_data = request.data
-            title = json_data['title']
-            estateType = json_data['estateType']
-            estateStatus = json_data['estateStatus']
+            title = json_data['title']  # required
+            estateType = json_data['estateType']  # required
+            estateStatus = json_data['estateStatus']  # required
             project = json_data['project']
-            province = json_data['province']
-            district = json_data['district']
+            province = json_data['province']  # required
+            district = json_data['district']  # required
             ward = json_data['ward']
             street = json_data['street']
             numberOfRoom = json_data['numberOfRoom']
-            description = json_data['description']
+            description = json_data['description']  # required
             detail = json_data['detail']
             price = json_data['price']
             area = json_data['area']
-            contact = json_data['contact']
+            contact = json_data['contact']  # required
             images = dict(json_data.lists())['image']
-            transaction = json_data['transaction']
+            transaction = json_data['transaction']  # required
 
             try:
                 # ------------------- Create Estate ---------------------#
+
+                # ------------------- Normalizer data -------------------#
+                project_instance = None
+                ward_instance = None
+                street_instance = None
                 estateType_instance = EstateType.objects.get(id=estateType)
                 estateStatus_instance = EstateStatus.objects.get(id=estateStatus)
-                project_instance = Project.objects.get(id=project)
                 province_instance = Province.objects.get(id=province)
                 district_instance = District.objects.get(id=district)
-                ward_instance = Ward.objects.get(id=ward)
-                street_instance = Street.objects.get(id=street)
+                if project:
+                    project_instance = Project.objects.get(id=project)
+                if ward:
+                    ward_instance = Ward.objects.get(id=ward)
+                if street:
+                    street_instance = Street.objects.get(id=street)
+                if numberOfRoom == "":
+                    numberOfRoom = 0
+                if price == "":
+                    price = 0
+                if area == "":
+                    area = 0
+
+                # ------------------------------------------------#
                 estate = Estate(
                     title=title,
                     estateType=estateType_instance,
@@ -246,7 +263,17 @@ class PostInfo(APIView):
                         file_serializer.save()
 
                 # ------------------- Create Post ---------------------#
-                #
+                user_instance = User.objects.get(id=user_id)
+                transaction_instance = TransactionType.objects.get(id=transaction)
+                new_post = Post(
+                    user=user_instance,
+                    estate=estate,
+                    transaction=transaction_instance,
+                    dateFrom=datetime.datetime.now().date(),
+                    dateTo=(datetime.datetime.now() + datetime.timedelta(30)).date()
+                )
+                new_post.save()
+
                 error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
                 return create_json_response(error_header, error_header, status_code=200)
 
