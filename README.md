@@ -1,14 +1,14 @@
 # RealEstate_server
-### Installation
+## Installation
 
+### Linux
 At root folder
-
+Require: Python 3.x, MySQL
 ```sh
 $ virtualenv env
 $ source env/bin/activate
 $ pip install django
 $ pip install djangorestframework
-$ pip freeze > requirements.txt
 $ pip install -r requirements.txt
 $ cd project
 $ python manager.py runserver
