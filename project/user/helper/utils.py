@@ -2,7 +2,9 @@ import cv2
 import os
 from django.core.exceptions import MultipleObjectsReturned
 
-from user.models import User, UserToken
+from user.models import User
+from django.conf import settings
+from rest_framework.authentication import get_authorization_header
 
 
 def is_username_exist(username):
@@ -43,4 +45,17 @@ def is_image_size_valid(img_url, mb_limit):
 
 
 def get_token(request):
-    return request.META.get('HTTP_AUTHORIZATION', b'').replace("Bearer ", "")
+    # return request.META.get('HTTP_AUTHORIZATION', b'').replace("Bearer ", "")
+    auth = get_authorization_header(request).split()
+    return auth[1].decode("utf-8")
+
+
+def get_image_url(request, url):
+    if url:
+        new_url = url
+        if "?" in new_url:
+            new_url = settings.MEDIA_URL + url[:url.rfind("?")]
+        new_url = request.build_absolute_uri(new_url)
+    else:
+        new_url = ""
+    return new_url

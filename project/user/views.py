@@ -12,7 +12,7 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
 
 from user.helper.authentication import Authentication
-from user.helper.utils import is_username_exist, is_email_exist, is_image_size_valid, is_image_aspect_ratio_valid
+from user.helper.utils import *
 from user.helper.json import *
 from user.helper.token import create_token
 from user.helper.email_support import reset_password_email
@@ -55,12 +55,13 @@ class UserInfo(APIView):
         password = json_data['password']
         gender = json_data['gender']
         email = json_data['email']
+        print(name + username + password + gender + email)
+
         address = json_data['address']
         phoneNumber = json_data['phoneNumber']
         identifyNumber = json_data['identifyNumber']
         birthday = json_data['birthday']
         avatar = json_data['avatar']
-        print(name + username + password + gender + email)
 
         try:
             if birthday:
@@ -124,6 +125,20 @@ class UserInfo(APIView):
 
 class Login(APIView):
     parser_classes = (MultiPartParser,)
+
+    def get_user_data(self, request, user):
+        json_response = {}
+        json_response['name'] = user.name
+        json_response['username'] = user.username
+        json_response['gender'] = user.gender
+        json_response['birthday'] = str(user.birthday)
+        json_response['address'] = user.address
+        json_response['avatar'] = get_image_url(request, user.avatar.url)
+        json_response['phoneNumber'] = user.phoneNumber
+        json_response['email'] = user.email
+        json_response['identifyNumber'] = user.identifyNumber
+        return json_response
+
     """
     user/login
     :
@@ -132,28 +147,41 @@ class Login(APIView):
     """
 
     def post(self, request):
-        ## Check permission
         try:
-            json_data = request.data
-            username = json_data['username']
-            password = json_data['password']
+            error_header, status_code = Authentication().authentication(request, type_token='user')
 
-            try:
-                user = User.objects.get(username=username)
-                if check_password(password, user.password):
-                    json_response = create_token(model_instance=user, model_type='user')
-                    json_response['username'] = user.username
+            if error_header['error_code']:  # Login with username and password
+                json_data = request.data
+                username = json_data['username']
+                password = json_data['password']
+                try:
+                    user = User.objects.get(username=username)
+                    if check_password(password, user.password):
+                        UserToken.objects.filter(user=user.id).delete()  # Delete token before
+                        json_response = self.get_user_data(request, user)
+                        json_response['token'] = create_token(model_instance=user, model_type='user')
+                        error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                        return create_json_response(json_response, error_header, status_code=200)
+                    else:
+                        error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + 'Login fail'}
+                        return create_json_response(error_header, error_header, status_code=200)
 
-                    error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
-                    return create_json_response(json_response, error_header, status_code=200)
-
-                else:
-                    error_header = {'error_code': EC_FAIL, 'error_message': EM_EXIST + 'Login fail'}
+                except User.DoesNotExist:
+                    error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + 'Login fail'}
                     return create_json_response(error_header, error_header, status_code=200)
 
-            except User.DoesNotExist:
-                error_header = {'error_code': EC_FAIL, 'error_message':  EM_EXIST + 'Login fail'}
-                return create_json_response(error_header, error_header, status_code=200)
+            else:  # Login with token
+                id = error_header['id']
+                user = User.objects.get(id=id)
+                user_token = UserToken.objects.get(user=user.id)
+                if user_token.token == get_token(request):
+                    json_response = self.get_user_data(request, user)
+                    error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                    return create_json_response(json_response, error_header, status_code=200)
+                else:
+                    error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + 'Login fail'}
+                    return create_json_response(error_header, error_header, status_code=200)
+
         except KeyError:
             error_header = {'error_code': EC_FAIL, 'error_message':  EM_EXIST + 'Missing require fields'}
             return create_json_response(error_header, error_header, status_code=200)

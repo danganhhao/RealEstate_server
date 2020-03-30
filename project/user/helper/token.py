@@ -25,4 +25,4 @@ def create_token(model_instance, model_type):
     )
 
     model_instance.save()
-    return {'token': token}
+    return token
