@@ -33,10 +33,20 @@ class UserInfo(APIView):
     """
 
     def get(self, request):
-        user = User.objects.all()
-        serializer = UserSerializer(user, context={"request": request}, many=True)
-        return Response(serializer.data)
+        try:
+            user = User.objects.all()
+            serializer = UserSerializer(user, context={"request": request}, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
 
+    """
+        /user/
+        Create a new user
+        Receive: username & password or token
+    """
     def post(self, request):
 
         # --------------- Check Admin Token for permission -------------
@@ -48,22 +58,23 @@ class UserInfo(APIView):
 
         # --------------- Register Flow --------------------------------
         # json_data = json.loads(request.body.decode('utf-8'))
-        json_data = request.data
-
-        name = json_data['name']
-        username = json_data['username']
-        password = json_data['password']
-        gender = json_data['gender']
-        email = json_data['email']
-        print(name + username + password + gender + email)
-
-        address = json_data['address']
-        phoneNumber = json_data['phoneNumber']
-        identifyNumber = json_data['identifyNumber']
-        birthday = json_data['birthday']
-        avatar = json_data['avatar']
 
         try:
+            json_data = request.data
+
+            name = json_data['name']
+            username = json_data['username']
+            password = json_data['password']
+            gender = json_data['gender']
+            email = json_data['email']
+            print(name + username + password + gender + email)
+
+            address = json_data['address']
+            phoneNumber = json_data['phoneNumber']
+            identifyNumber = json_data['identifyNumber']
+            birthday = json_data['birthday']
+            avatar = json_data['avatar']
+
             if birthday:
                 birthday = datetime.strptime(birthday, '%d/%m/%Y')
             else:
@@ -121,6 +132,37 @@ class UserInfo(APIView):
             print(e)
             error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
+
+    """
+        /user/
+        Modify a existed user
+        Receive: token
+    """
+    # def put(self, request):
+    #     try:
+    #         error_header, status_code = Authentication().authentication(request, type_token='user')
+    #         if error_header['error_code']:
+    #             return create_json_response(error_header, error_header, status_code=status_code)
+    #
+    #         id = error_header['id']
+    #         try:
+    #             if id:
+    #                 user = User.objects.get(id=id)
+    #                 # TODO Modify data at here
+    #                 error_header = {'error_code': EC_SUCCESS, 'error_message': 'success'}
+    #                 return create_json_response(error_header, error_header, status_code=200)
+    #
+    #         except UserToken.DoesNotExist:
+    #             error_header = {'error_code': EC_FAIL, 'error_message': 'Logout fail'}
+    #             return create_json_response(error_header, error_header, status_code=200)
+    #     except KeyError:
+    #         error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+    #         return create_json_response(error_header, error_header, status_code=200)
+    #
+    #     except Exception as e:
+    #         print(e)
+    #         error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+    #         return create_json_response(error_header, error_header, status_code=200)
 
 
 class Login(APIView):
