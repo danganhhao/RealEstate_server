@@ -62,18 +62,16 @@ class UserInfo(APIView):
         try:
             json_data = request.data
 
-            name = json_data['name']
-            username = json_data['username']
-            password = json_data['password']
-            gender = json_data['gender']
-            email = json_data['email']
-            print(name + username + password + gender + email)
-
-            address = json_data['address']
-            phoneNumber = json_data['phoneNumber']
-            identifyNumber = json_data['identifyNumber']
-            birthday = json_data['birthday']
-            avatar = json_data['avatar']
+            name = json_data.get('name')
+            username = json_data.get('username')
+            password = json_data.get('password')
+            gender = json_data.get('gender')
+            email = json_data.get('email')
+            address = json_data.get('address', None)
+            phoneNumber = json_data.get('phoneNumber', None)
+            identifyNumber = json_data.get('identifyNumber', None)
+            birthday = json_data.get('birthday', None)
+            avatar = json_data.get('avatar', None)
 
             if birthday:
                 birthday = datetime.strptime(birthday, '%d/%m/%Y')

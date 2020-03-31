@@ -192,22 +192,23 @@ class PostInfo(APIView):
             user_id = error_header['id']
 
             json_data = request.data
-            title = json_data['title']  # required
-            estateType = json_data['estateType']  # required
-            estateStatus = json_data['estateStatus']  # required
-            project = json_data['project']
-            province = json_data['province']  # required
-            district = json_data['district']  # required
-            ward = json_data['ward']
-            street = json_data['street']
-            numberOfRoom = json_data['numberOfRoom']
-            description = json_data['description']  # required
-            detail = json_data['detail']
-            price = json_data['price']
-            area = json_data['area']
-            contact = json_data['contact']  # required
-            images = dict(json_data.lists())['image']
-            transaction = json_data['transaction']  # required
+            title = json_data.get('title')  # required
+            estateType = json_data.get('estateType')  # required
+            estateStatus = json_data.get('estateStatus')  # required
+            project = json_data.get('project', None)
+            province = json_data.get('province')  # required
+            district = json_data.get('district')  # required
+            ward = json_data.get('ward', None)
+            street = json_data.get('street', None)
+            numberOfRoom = json_data.get('numberOfRoom', "")
+            description = json_data.get('description')  # required
+            detail = json_data.get('detail')
+            price = json_data.get('price', "")
+            area = json_data.get('area', "")
+            contact = json_data.get('contact')  # required
+            images = dict(json_data.lists()).get('image', [])
+            transaction = json_data.get('transaction')  # required
+            print(images)
 
             try:
                 # ------------------- Create Estate ---------------------#
