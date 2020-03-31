@@ -29,7 +29,10 @@ $ cd ..\..\ && pip install -r requirements.txt
 
 3. Use xampp-control to start server MySQL and create user
 
-4. cd project && python manager.py runserver
+4. Run server
+```sh
+cd project && python manager.py runserver
+```
 
 
 
