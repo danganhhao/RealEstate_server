@@ -19,11 +19,13 @@ $ python manage.py runserver
 Download at link https://dev.mysql.com/downloads/windows/installer/8.0.html. Need install Visual Studio Build Tools and Component C++ build tools if have not
 
 2. Open Cmd at root folder, run following command
+```sh
 $ virtualenv env
 $ cd env\Scripts && activate
 $ pip install django
 $ pip install djangorestframework
 $ cd ..\..\ && pip install -r requirements.txt
+```
 
 3. Use xampp-control to start server MySQL and create user
 
