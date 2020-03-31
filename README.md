@@ -13,7 +13,7 @@ $ pip install -r requirements.txt
 $ cd project
 $ python manage.py runserver
 ```
-### Window
+### Windows
 
 1. Install MySQL
 Download at link https://dev.mysql.com/downloads/windows/installer/8.0.html. Need install Visual Studio Build Tools and Component C++ build tools if have not
