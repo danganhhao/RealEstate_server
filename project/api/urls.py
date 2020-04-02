@@ -19,6 +19,8 @@ urlpatterns = [
     path('post/', PostInfo.as_view(), name='post'),
     url(r'^estate/$', EstateInfo.as_view(), name='estate'),
     # path('estate/$', EstateInfo.as_view(), name='estate'),
+    path('filtertype/', FilterTypeInfo.as_view(), name='project'),
+    path('sorttype/', SortTypeInfo.as_view(), name='project'),
     path('estate/<int:id>', EstateDetailInfo.as_view(), name='estate_detail')
 
 ]

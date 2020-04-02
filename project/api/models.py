@@ -149,3 +149,19 @@ class Interest(models.Model):
 
     def __str__(self):
         return self.user.name
+
+
+# Filter type table:
+class FilterType(models.Model):
+    name = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.name
+
+
+# Sort type table:
+class SortType(models.Model):
+    name = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.name

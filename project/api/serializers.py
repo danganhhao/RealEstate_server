@@ -173,3 +173,15 @@ class InterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interest
         fields = '__all__'
+
+
+class FilterTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FilterType
+        fields = '__all__'
+
+
+class SortTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SortType
+        fields = '__all__'

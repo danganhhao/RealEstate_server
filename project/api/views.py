@@ -305,7 +305,7 @@ class EstateInfo(APIView):
     """
     def get(self, request):
         try:
-            page = request.GET.get('page', '1')
+            page = request.GET.get('page', 1)
             estate = Estate.objects.all().order_by('id')
             paginator = Paginator(estate, ITEMS_PER_PAGE, allow_empty_first_page=True)
             try:
@@ -339,6 +339,78 @@ class EstateDetailInfo(APIView):
 
     def get(self, request, id):
         try:
+            estate = self.get_object(id)
+            serializer = EstateDetailSerializer(estate, context={"request": request})
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class FilterTypeInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/filtertype
+    :usage get all filter type
+    :return Json 
+    """
+
+    def get(self, request):
+        try:
+            filter_type = FilterType.objects.all()
+            serializer = FilterTypeSerializer(filter_type, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class SortTypeInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/sorttype
+    :usage get all sort type
+    :return Json 
+    """
+
+    def get(self, request):
+        try:
+            sort_type = SortType.objects.all()
+            serializer = SortTypeSerializer(sort_type, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class SearchEngine(APIView):
+    parser_classes = (MultiPartParser,)
+
+    # def get_object(self, id):
+    #     try:
+    #         return Estate.objects.get(id=id)
+    #     except Estate.DoesNotExist:
+    #         return Response(status=status.HTTP_404_NOT_FOUND)
+
+    """
+        .../api/search/
+        :return estate list with parameters 
+    """
+
+    def post(self, request):
+        try:
+            m_page = request.GET.get('page', 1)
+            json_data = request.data
+            m_keyword = json_data.get('keyword', None)
+            m_province = json_data.get('province', None)
+            m_district = json_data.get('district', None)
+            m_ward = json_data.get('ward', None)
+            m_street = json_data.get('street', None)
+            m_filter = json_data.get('filter', None)
+            m_sort = json_data.get('sort', None)
+
             estate = self.get_object(id)
             serializer = EstateDetailSerializer(estate, context={"request": request})
             return Response(serializer.data)
