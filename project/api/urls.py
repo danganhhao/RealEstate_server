@@ -17,7 +17,8 @@ urlpatterns = [
     path('project/', ProjectInfo.as_view(), name='project'),
     path('transaction/', TransactionTypeInfo.as_view(), name='transaction'),
     path('post/', PostInfo.as_view(), name='post'),
-    path('estate/', EstateInfo.as_view(), name='estate'),
+    url(r'^estate/$', EstateInfo.as_view(), name='estate'),
+    # path('estate/$', EstateInfo.as_view(), name='estate'),
     path('estate/<int:id>', EstateDetailInfo.as_view(), name='estate_detail')
 
 ]

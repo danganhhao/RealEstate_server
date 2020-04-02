@@ -7,6 +7,8 @@ REQUEST = 'request'
 TYPE = 'type'
 ID = 'id'
 
+ITEMS_PER_PAGE = 25
+
 EC_SUCCESS = '1'
 EC_FAIL = '0'
 EC_EXIST = '2'

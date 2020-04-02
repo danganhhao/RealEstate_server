@@ -6,7 +6,6 @@ from django.shortcuts import render
 # Create your views here.
 
 import json
-import datetime
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -19,6 +18,9 @@ from user.helper.authentication import Authentication
 from user.helper.json import create_json_response
 from user.models import *
 from user.helper.string import *
+
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
+from django.utils import timezone
 
 
 class ProvinceInfo(APIView):
@@ -249,7 +251,8 @@ class PostInfo(APIView):
                     detail=detail,
                     price=price,
                     area=area,
-                    contact=contact
+                    contact=contact,
+                    created_day=timezone.now()
                 )
                 estate.save()
 
@@ -270,8 +273,8 @@ class PostInfo(APIView):
                     user=user_instance,
                     estate=estate,
                     transaction=transaction_instance,
-                    dateFrom=datetime.datetime.now().date(),
-                    dateTo=(datetime.datetime.now() + datetime.timedelta(30)).date()
+                    dateFrom=timezone.now(),
+                    dateTo=(timezone.now() + timezone.timedelta(days=30))
                 )
                 new_post.save()
 
@@ -302,9 +305,20 @@ class EstateInfo(APIView):
     """
     def get(self, request):
         try:
-            estate = Estate.objects.all()
-            serializer = EstateSerializer(estate, context={"request": request}, many=True)
-            return Response(serializer.data)
+            page = request.GET.get('page', '1')
+            estate = Estate.objects.all().order_by('id')
+            paginator = Paginator(estate, ITEMS_PER_PAGE, allow_empty_first_page=True)
+            try:
+                estate_obj = paginator.page(page)
+                serializer = EstateSerializer(estate_obj, context={"request": request}, many=True)
+                result = {}
+                result['current_page'] = page
+                result['total_page'] = str(paginator.num_pages)
+                result['result'] = serializer.data
+                return Response(result)
+            except EmptyPage:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'fail - index out of range'}
+                return create_json_response(error_header, error_header, status_code=200)
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)

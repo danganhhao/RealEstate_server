@@ -115,6 +115,7 @@ class Estate(models.Model):
     price = models.BigIntegerField()
     area = models.FloatField()
     contact = models.CharField(max_length=100)
+    created_day = models.DateTimeField()
 
     def __str__(self):
         return str(self.id)
