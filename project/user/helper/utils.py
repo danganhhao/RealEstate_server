@@ -59,3 +59,23 @@ def get_image_url(request, url):
     else:
         new_url = ""
     return new_url
+
+
+def normalize_filter_param(filter_id):
+    switcher = {
+        1: "",
+        2: ""
+    }
+    return switcher.get(filter_id, "")
+
+
+def normalize_sort_param(sort_id):
+    switcher = {
+        "1": "",
+        "2": "-created_day",
+        "3": "price",
+        "4": "-price",
+        "5": "area",
+        "6": "-area"
+    }
+    return switcher.get(sort_id, "")

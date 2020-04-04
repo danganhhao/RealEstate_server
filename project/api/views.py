@@ -16,6 +16,7 @@ from api.models import *
 from api.serializers import *
 from user.helper.authentication import Authentication
 from user.helper.json import create_json_response
+from user.helper.utils import normalize_sort_param
 from user.models import *
 from user.helper.string import *
 
@@ -388,32 +389,48 @@ class SortTypeInfo(APIView):
 class SearchEngine(APIView):
     parser_classes = (MultiPartParser,)
 
-    # def get_object(self, id):
-    #     try:
-    #         return Estate.objects.get(id=id)
-    #     except Estate.DoesNotExist:
-    #         return Response(status=status.HTTP_404_NOT_FOUND)
-
     """
         .../api/search/
         :return estate list with parameters 
     """
 
     def post(self, request):
+        fields = ['province', 'district', 'ward', 'street']
         try:
-            m_page = request.GET.get('page', 1)
+            page = request.GET.get('page', 1)
             json_data = request.data
             m_keyword = json_data.get('keyword', None)
-            m_province = json_data.get('province', None)
-            m_district = json_data.get('district', None)
-            m_ward = json_data.get('ward', None)
-            m_street = json_data.get('street', None)
             m_filter = json_data.get('filter', None)
             m_sort = json_data.get('sort', None)
 
-            estate = self.get_object(id)
-            serializer = EstateDetailSerializer(estate, context={"request": request})
-            return Response(serializer.data)
+            estate = Estate.objects.all()
+            if m_keyword is not None:
+                estate = estate.filter(title__icontains=m_keyword)
+            for field in fields:
+                value = json_data.get(field, None)
+                if value is not None:
+                    estate = estate.filter(**{field: value})
+
+            if m_sort is not None:
+                estate = estate.order_by(normalize_sort_param(m_sort))
+
+            paginator = Paginator(estate, ITEMS_PER_PAGE, allow_empty_first_page=True)
+            try:
+                estate_obj = paginator.page(page)
+                serializer = EstateSerializer(estate_obj, context={"request": request}, many=True)
+                result = {}
+                result['current_page'] = str(page)
+                result['total_page'] = str(paginator.num_pages)
+                result['result'] = serializer.data
+                return Response(result)
+            except EmptyPage:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'fail - index out of range'}
+                return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
