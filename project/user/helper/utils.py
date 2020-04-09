@@ -50,11 +50,11 @@ def get_token(request):
     return auth[1].decode("utf-8")
 
 
-def get_image_url(request, url):
-    if url:
-        new_url = url
+def get_image_url(request, avatar):
+    if avatar != "":
+        new_url = avatar.url
         if "?" in new_url:
-            new_url = settings.MEDIA_URL + url[:url.rfind("?")]
+            new_url = settings.MEDIA_URL + avatar.url[:avatar.url.rfind("?")]
         new_url = request.build_absolute_uri(new_url)
     else:
         new_url = ""
