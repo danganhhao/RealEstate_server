@@ -348,25 +348,6 @@ class EstateDetailInfo(APIView):
             return create_json_response(error_header, error_header, status_code=200)
 
 
-class FilterMaxPriceInfo(APIView):
-    parser_classes = (MultiPartParser,)
-
-    """
-    .../api/filtermaxprice
-    :usage get all filter type
-    :return Json 
-    """
-
-    def get(self, request):
-        try:
-            filter_type = FilterMaxPrice.objects.all()
-            serializer = FilterMaxPriceSerializer(filter_type, many=True)
-            return Response(serializer.data)
-        except Exception as e:
-            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
-            return create_json_response(error_header, error_header, status_code=200)
-
-
 class SortTypeInfo(APIView):
     parser_classes = (MultiPartParser,)
 
@@ -380,6 +361,101 @@ class SortTypeInfo(APIView):
         try:
             sort_type = SortType.objects.all()
             serializer = SortTypeSerializer(sort_type, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class FilterMaxPriceInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/filtermaxprice
+    :usage get all filter max price type
+    :return Json 
+    """
+
+    def get(self, request):
+        try:
+            filter_type = FilterMaxPrice.objects.all()
+            serializer = FilterMaxPriceSerializer(filter_type, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class FilterMinPriceInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/filterminprice
+    :usage get all filter min price type
+    :return Json 
+    """
+
+    def get(self, request):
+        try:
+            filter_type = FilterMinPrice.objects.all()
+            serializer = FilterMinPriceSerializer(filter_type, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class FilterAreaInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/filterarea
+    :usage get all filter area type
+    :return Json 
+    """
+
+    def get(self, request):
+        try:
+            filter_type = FilterArea.objects.all()
+            serializer = FilterAreaSerializer(filter_type, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class FilterNumberOfRoomInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/filternumberofroom
+    :usage get all filter number of room type
+    :return Json 
+    """
+
+    def get(self, request):
+        try:
+            filter_type = FilterNumberOfRoom.objects.all()
+            serializer = FilterNumberOfRoomSerializer(filter_type, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class FilterPostTimeInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/filterposttime
+    :usage get all filter post time type
+    :return Json 
+    """
+
+    def get(self, request):
+        try:
+            filter_type = FilterPostTime.objects.all()
+            serializer = FilterPostTimeSerializer(filter_type, many=True)
             return Response(serializer.data)
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}

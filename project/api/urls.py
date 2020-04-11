@@ -22,6 +22,10 @@ urlpatterns = [
     path('estate/<int:id>', EstateDetailInfo.as_view(), name='estate_detail'),
     path('sorttype/', SortTypeInfo.as_view(), name='sort_type'),
     path('filtermaxprice/', FilterMaxPriceInfo.as_view(), name='filter_max_price'),
+    path('filterminprice/', FilterMinPriceInfo.as_view(), name='filter_min_price'),
+    path('filterarea/', FilterAreaInfo.as_view(), name='filter_area'),
+    path('filternumberofroom/', FilterNumberOfRoomInfo.as_view(), name='filter_number_of_room'),
+    path('filterposttime/', FilterPostTimeInfo.as_view(), name='filter_post_time'),
     path('search/', SearchEngine.as_view(), name='search')
 
 ]
