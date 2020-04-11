@@ -228,7 +228,6 @@ class FilterPostTimeSerializer(serializers.ModelSerializer):
         # fields = '__all__'
 
 
-
 class SortTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = SortType

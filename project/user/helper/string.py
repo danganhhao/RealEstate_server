@@ -7,6 +7,8 @@ REQUEST = 'request'
 TYPE = 'type'
 ID = 'id'
 
+MAX_INT = 99999999
+
 ITEMS_PER_PAGE = 25
 
 EC_SUCCESS = '1'

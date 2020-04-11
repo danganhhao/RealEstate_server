@@ -16,7 +16,7 @@ from api.models import *
 from api.serializers import *
 from user.helper.authentication import Authentication
 from user.helper.json import create_json_response
-from user.helper.utils import normalize_sort_param
+from user.helper.utils import *
 from user.models import *
 from user.helper.string import *
 
@@ -476,20 +476,77 @@ class SearchEngine(APIView):
             page = request.GET.get('page', 1)
             json_data = request.data
             m_keyword = json_data.get('keyword', None)
-            m_filter = json_data.get('filter', None)
             m_sort = json_data.get('sort', None)
+            m_estate_type = json_data.get('estate_type', None)
+            m_filter_max_price = json_data.get('filter_max_price', None)
+            m_filter_min_price = json_data.get('filter_min_price', None)
+            m_filter_area = json_data.get('filter_area', None)
+            m_filter_number_of_room = json_data.get('filter_number_of_room', None)
+            m_filter_post_time = json_data.get('filter_post_time', None)
 
             estate = Estate.objects.all()
-            if m_keyword is not None:
+            # --------------- Filter estate type ------------------
+            if m_estate_type is not None and m_estate_type != "":
+                estate = estate.filter(estateType=m_estate_type)
+
+            # --------------- Search with keyword -----------------
+            if m_keyword is not None and m_keyword != "":
                 estate = estate.filter(title__icontains=m_keyword)
+
+            # --------------- Filter: Location --------------------
             for field in fields:
                 value = json_data.get(field, None)
-                if value is not None:
+                if value is not None and value != "":
                     estate = estate.filter(**{field: value})
 
-            if m_sort is not None:
-                estate = estate.order_by(normalize_sort_param(m_sort))
+            # --------------- Filter with max price ---------------
+            if m_filter_max_price is not None and m_filter_max_price != "":
+                v = FilterMaxPrice.objects.get(id=m_filter_max_price).value
+                param = normalize_filter_max_price_param(v)
+                if param is not None:
+                    estate = estate.filter(price__lte=param)
 
+            # --------------- Filter with min price ---------------
+            if m_filter_min_price is not None and m_filter_min_price != "":
+                v = FilterMinPrice.objects.get(id=m_filter_min_price).value
+                param = normalize_filter_min_price_param(v)
+                if param is not None:
+                    estate = estate.filter(price__gte=param)
+
+            # --------------- Filter with area ---------------
+            if m_filter_area is not None and m_filter_area != "":
+                print(m_filter_area)
+
+                v = FilterArea.objects.get(id=m_filter_area).value
+                param = normalize_filter_area_param(v)
+                if param is not None:
+                    estate = estate.filter(area__range=(param[0], param[1]))
+
+            # --------------- Filter with number of room -----
+            if m_filter_number_of_room is not None and m_filter_number_of_room != "":
+                v = FilterNumberOfRoom.objects.get(id=m_filter_number_of_room).value
+                param = normalize_filter_number_of_room_param(v)
+                if param is not None:
+                    if param != -1:
+                        estate = estate.filter(numberOfRoom=param)
+                    else:
+                        estate = estate.filter(numberOfRoom__range=(6, MAX_INT))
+
+            # --------------- Filter with post time----------------
+            if m_filter_post_time is not None and m_filter_post_time != "":
+                v = FilterPostTime.objects.get(id=m_filter_post_time).value
+                param = normalize_filter_post_time_param(v)
+                if param is not None:
+                    estate = estate.filter(created_day__range=(param[0], param[1]))
+
+            # --------------- Sort --------------------------------
+            if m_sort is not None and m_sort != "":
+                v = SortType.objects.get(id=m_sort).value
+                param = normalize_sort_param(v)
+                if param is not None:
+                    estate = estate.order_by(param)
+
+            # --------------- Pagination --------------------------
             paginator = Paginator(estate, ITEMS_PER_PAGE, allow_empty_first_page=True)
             try:
                 estate_obj = paginator.page(page)

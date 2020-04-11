@@ -1,10 +1,14 @@
 import cv2
 import os
+
 from django.core.exceptions import MultipleObjectsReturned
+from django.utils import timezone
+from django.conf import settings
+
+from rest_framework.authentication import get_authorization_header
 
 from user.models import User
-from django.conf import settings
-from rest_framework.authentication import get_authorization_header
+from user.helper.string import *
 
 
 def is_username_exist(username):
@@ -61,21 +65,89 @@ def get_image_url(request, avatar):
     return new_url
 
 
-def normalize_filter_param(filter_id):
+def normalize_filter_max_price_param(filter_id):
     switcher = {
-        1: "",
-        2: ""
+        1: None,
+        2: 500,  # million
+        3: 800,
+        4: 1000,
+        5: 2000,
+        6: 3000,
+        7: 5000,
+        8: 7000,
+        9: 10000,
+        10: 15000,
+        11: 30000,
     }
-    return switcher.get(filter_id, "")
+    return switcher.get(filter_id, None)
+
+
+def normalize_filter_min_price_param(filter_id):
+    switcher = {
+        1: None,
+        2: 500,  # million
+        3: 800,
+        4: 1000,
+        5: 2000,
+        6: 3000,
+        7: 5000,
+        8: 7000,
+        9: 10000,
+        10: 15000,
+        11: 30000,
+    }
+    return switcher.get(filter_id, None)
+
+
+def normalize_filter_area_param(filter_id):
+    switcher = {
+        1: None,
+        2: (0, 30),
+        3: (30, 50),
+        4: (50, 70),
+        5: (70, 100),
+        6: (100, 150),
+        7: (150, 250),
+        8: (250, 500),
+        9: (500, 1000),
+        10: (1000, 2000),
+        11: (2000, MAX_INT),
+    }
+    return switcher.get(filter_id, None)
+
+
+def normalize_filter_number_of_room_param(filter_id):
+    switcher = {
+        1: None,
+        2: 1,
+        3: 2,
+        4: 3,
+        5: 4,
+        6: 5,
+        7: -1,
+    }
+    return switcher.get(filter_id, None)
+
+
+def normalize_filter_post_time_param(filter_id):
+    switcher = {
+        1: None,
+        2: (str(timezone.now() - timezone.timedelta(days=1)), str(timezone.now())),
+        3: (str(timezone.now() - timezone.timedelta(days=3)), str(timezone.now())),
+        4: (str(timezone.now() - timezone.timedelta(days=7)), str(timezone.now())),
+        5: (str(timezone.now() - timezone.timedelta(days=15)), str(timezone.now())),
+        6: (str(timezone.now() - timezone.timedelta(days=30)), str(timezone.now())),
+    }
+    return switcher.get(filter_id, None)
 
 
 def normalize_sort_param(sort_id):
     switcher = {
-        "1": "",
+        "1": None,
         "2": "-created_day",
         "3": "price",
         "4": "-price",
         "5": "area",
         "6": "-area"
     }
-    return switcher.get(sort_id, "")
+    return switcher.get(sort_id, None)
