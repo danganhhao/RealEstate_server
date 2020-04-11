@@ -34,14 +34,6 @@ class EstateStatus(models.Model):
         return self.status
 
 
-# Project table: describe a project information, include: name, invesloper, constructor,...)
-class Project(models.Model):
-    name = models.CharField(max_length=30)
-
-    def __str__(self):
-        return self.name
-
-
 # Type transaction table: buy or sell
 class TransactionType(models.Model):
     TYPE = (
@@ -94,6 +86,19 @@ class Street(models.Model):
     prefix = models.CharField(max_length=20, null=True)
     province_id = models.ForeignKey(Province, related_name='streets', on_delete=models.CASCADE)
     district_id = models.ForeignKey(District, related_name='streets', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.name
+
+
+# Project table: describe a project information, include: name, invesloper, constructor,...)
+class Project(models.Model):
+    id = models.IntegerField(primary_key=True, unique=True)
+    name = models.CharField(max_length=50, null=True)
+    province_id = models.ForeignKey(Province, related_name='projects', on_delete=models.CASCADE)
+    district_id = models.ForeignKey(District, related_name='projects', on_delete=models.CASCADE)
+    lat = models.FloatField(default=0, null=True)
+    lng = models.FloatField(default=0, null=True)
 
     def __str__(self):
         return self.name

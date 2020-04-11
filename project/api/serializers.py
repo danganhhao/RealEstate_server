@@ -18,7 +18,8 @@ class EstateStatusSerializer(serializers.ModelSerializer):
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = '__all__'
+        fields = ('id', 'name', 'lat', 'lng')
+        # fields = '__all__'
 
 
 class TransactionTypeSerializer(serializers.ModelSerializer):
@@ -44,10 +45,11 @@ class WardSerializer(serializers.ModelSerializer):
 class DistrictSerializer(serializers.ModelSerializer):
     wards = WardSerializer(many=True, read_only=True)
     streets = StreetSerializer(many=True, read_only=True)
+    projects = ProjectSerializer(many=True, read_only=True)
 
     class Meta:
         model = District
-        fields = ['id', 'name', 'wards', 'streets']
+        fields = ['id', 'name', 'wards', 'streets', 'projects']
         # fields = '__all__'
 
 
@@ -91,10 +93,11 @@ class EstateSerializer(serializers.ModelSerializer):
     images = EstateImageGetterSerializer(many=True, read_only=True)
     province = serializers.SerializerMethodField('get_province')
     district = serializers.SerializerMethodField('get_district')
+    project = serializers.SerializerMethodField('get_project')
 
     class Meta:
         model = Estate
-        fields = ['id', 'title', 'images', 'province', 'district', 'contact']
+        fields = ['id', 'title', 'images', 'province', 'district', 'contact', 'project']
 
     # def get_a_image(self, estate):
     #     img = EstateImage.objects.filter(estate=estate.id).first()
@@ -110,6 +113,16 @@ class EstateSerializer(serializers.ModelSerializer):
     def get_district(self, estate):
         if estate.district:
             return estate.district.name
+        return ""
+
+    def get_project(self, estate):
+        if estate.project:
+            result = {}
+            result['id'] = estate.project.id
+            result['name'] = estate.project.name
+            result['lat'] = estate.project.lat
+            result['lng'] = estate.project.lng
+            return result
         return ""
 
 
@@ -139,7 +152,12 @@ class EstateDetailSerializer(serializers.ModelSerializer):
 
     def get_project(self, estate):
         if estate.project:
-            return estate.project.name
+            result = {}
+            result['id'] = estate.project.id
+            result['name'] = estate.project.name
+            result['lat'] = estate.project.lat
+            result['lng'] = estate.project.lng
+            return result
         return ""
 
     def get_province(self, estate):
