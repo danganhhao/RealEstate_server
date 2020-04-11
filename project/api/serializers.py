@@ -193,13 +193,44 @@ class InterestSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FilterTypeSerializer(serializers.ModelSerializer):
+class FilterMaxPriceSerializer(serializers.ModelSerializer):
     class Meta:
-        model = FilterType
-        fields = '__all__'
+        model = FilterMaxPrice
+        fields = ('id', 'name')
+        # fields = '__all__'
+
+
+class FilterMinPriceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FilterMinPrice
+        fields = ('id', 'name')
+        # fields = '__all__'
+
+
+class FilterAreaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FilterArea
+        fields = ('id', 'name')
+        # fields = '__all__'
+
+
+class FilterNumberOfRoomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FilterNumberOfRoom
+        fields = ('id', 'name')
+        # fields = '__all__'
+
+
+class FilterPostTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FilterPostTime
+        fields = ('id', 'name')
+        # fields = '__all__'
+
 
 
 class SortTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = SortType
-        fields = '__all__'
+        fields = ('id', 'name')
+        # fields = '__all__'

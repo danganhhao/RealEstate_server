@@ -348,19 +348,19 @@ class EstateDetailInfo(APIView):
             return create_json_response(error_header, error_header, status_code=200)
 
 
-class FilterTypeInfo(APIView):
+class FilterMaxPriceInfo(APIView):
     parser_classes = (MultiPartParser,)
 
     """
-    .../api/filtertype
+    .../api/filtermaxprice
     :usage get all filter type
     :return Json 
     """
 
     def get(self, request):
         try:
-            filter_type = FilterType.objects.all()
-            serializer = FilterTypeSerializer(filter_type, many=True)
+            filter_type = FilterMaxPrice.objects.all()
+            serializer = FilterMaxPriceSerializer(filter_type, many=True)
             return Response(serializer.data)
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}

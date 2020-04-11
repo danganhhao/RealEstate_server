@@ -156,9 +156,46 @@ class Interest(models.Model):
         return self.user.name
 
 
-# Filter type table:
-class FilterType(models.Model):
+# Filter max price table:
+class FilterMaxPrice(models.Model):
     name = models.CharField(max_length=30)
+    value = models.IntegerField()
+
+    def __str__(self):
+        return self.name
+
+
+# Filter min price table:
+class FilterMinPrice(models.Model):
+    name = models.CharField(max_length=30)
+    value = models.IntegerField()
+
+    def __str__(self):
+        return self.name
+
+
+# Filter area table:
+class FilterArea(models.Model):
+    name = models.CharField(max_length=30)
+    value = models.IntegerField()
+
+    def __str__(self):
+        return self.name
+
+
+# Filter number of room table:
+class FilterNumberOfRoom(models.Model):
+    name = models.CharField(max_length=30)
+    value = models.IntegerField()
+
+    def __str__(self):
+        return self.name
+
+
+# Filter post time table:
+class FilterPostTime(models.Model):
+    name = models.CharField(max_length=30)
+    value = models.IntegerField()
 
     def __str__(self):
         return self.name
@@ -167,6 +204,7 @@ class FilterType(models.Model):
 # Sort type table:
 class SortType(models.Model):
     name = models.CharField(max_length=30)
+    value = models.IntegerField()
 
     def __str__(self):
         return self.name

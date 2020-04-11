@@ -20,8 +20,8 @@ urlpatterns = [
     url(r'^estate/$', EstateInfo.as_view(), name='estate'),
     # path('estate/$', EstateInfo.as_view(), name='estate'),
     path('estate/<int:id>', EstateDetailInfo.as_view(), name='estate_detail'),
-    path('filtertype/', FilterTypeInfo.as_view(), name='filter_type'),
     path('sorttype/', SortTypeInfo.as_view(), name='sort_type'),
+    path('filtermaxprice/', FilterMaxPriceInfo.as_view(), name='filter_max_price'),
     path('search/', SearchEngine.as_view(), name='search')
 
 ]
