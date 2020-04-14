@@ -95,6 +95,108 @@ class DistrictDetailInfo(APIView):
             return create_json_response(error_header, error_header, status_code=200)
 
 
+# ---- Block get special location with condition ----------
+class ProvinceSpecialInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/s/province
+    :usage get all province, it only contains (id, name, code)
+    :return Json 
+    """
+
+    def get(self, request):
+        try:
+            provinces = Province.objects.all()
+            serializer = ProvinceSpecialSerializer(provinces, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class DistrictSpecialInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/s/district/<province_id>
+    :param province_id
+    :usage get all district of province_id, it only contains (id, name, prefix)
+    :return Json 
+    """
+
+    def get(self, request, id):
+        try:
+            districts = District.objects.filter(province_id=id)
+            serializer = DistrictSpecialSerializer(districts, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class WardSpecialInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/s/ward/<district_id>
+    :param district_id
+    :usage get all ward of district_id, it only contains (id, name, prefix)
+    :return Json 
+    """
+
+    def get(self, request, id):
+        try:
+            wards = Ward.objects.filter(district_id=id)
+            serializer = WardSerializer(wards, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class StreetSpecialInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/s/street/<district_id>
+    :param district_id
+    :usage get all street of district_id, it only contains (id, name, prefix)
+    :return Json 
+    """
+
+    def get(self, request, id):
+        try:
+            streets = Street.objects.filter(district_id=id)
+            serializer = StreetSerializer(streets, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class ProjectSpecialInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/s/project/<district_id>
+    :param district_id
+    :usage get all project of district_id, it only contains (id, name, lat, lng)
+    :return Json 
+    """
+
+    def get(self, request, id):
+        try:
+            projects = Project.objects.filter(district_id=id)
+            serializer = ProjectSerializer(projects, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+# ---- End block-------------------------------------------
+
+
 class EstateTypeInfo(APIView):
     parser_classes = (MultiPartParser,)
 

@@ -15,17 +15,18 @@ class EstateStatusSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TransactionTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TransactionType
+        fields = '__all__'
+
+
+# ----------------------Get all location-----------------------
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ('id', 'name', 'lat', 'lng')
         # fields = '__all__'
-
-
-class TransactionTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TransactionType
-        fields = '__all__'
 
 
 class StreetSerializer(serializers.ModelSerializer):
@@ -60,6 +61,21 @@ class ProvinceSerializer(serializers.ModelSerializer):
         model = Province
         fields = ['id', 'name', 'code', 'districts']
         # fields = '__all__'
+
+
+# ----------------------Start get special location-----------------------
+class ProvinceSpecialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Province
+        fields = ['id', 'name', 'code']
+
+
+class DistrictSpecialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = District
+        fields = ['id', 'name', 'prefix']
+
+# ----------------------End get special location-----------------------
 
 
 class EstateImageSetterSerializer(serializers.ModelSerializer):
