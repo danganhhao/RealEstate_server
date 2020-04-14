@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import cloudinary
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,6 +26,13 @@ SECRET_KEY = 'ukvwja9-8ks8)ukpuifrrbeimko*&lcmwfsv1o5_5-wv2uo4j1'
 DEBUG = True
 
 ALLOWED_HOSTS = ['192.168.0.103', 'localhost', '127.0.0.1', '10.0.2.2']
+
+# Config cloudinary
+cloudinary.config(
+    cloud_name='myrealestate',
+    api_key='299479525615683',
+    api_secret='z_NsgEdhVOBFenkmr__UPELR32c'
+)
 
 # Application definition
 
