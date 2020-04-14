@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 # Create your views here.
 
-import json
+import cloudinary.uploader
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -313,7 +313,6 @@ class PostInfo(APIView):
             contact = json_data.get('contact')  # required
             images = dict(json_data.lists()).get('image', [])
             transaction = json_data.get('transaction')  # required
-            print(images)
 
             try:
                 # ------------------- Create Estate ---------------------#
@@ -363,11 +362,18 @@ class PostInfo(APIView):
 
                 estate_id = estate.id
                 for img_name in images:
-                    modified_data = self.modify_input_for_multiple_files(estate_id, img_name)
-                    file_serializer = EstateImageSetterSerializer(data=modified_data)
-                    print(file_serializer)
-                    if file_serializer.is_valid():
-                        file_serializer.save()
+                    # ---- Check image size --------
+                    if not is_image_size_valid(img_name.size, IMAGE_SIZE_MAX_BYTES):
+                        error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
+                        return create_json_response(error_header, error_header, status_code=200)
+
+                    path = uploadLocationEstate(estate_id, img_name.size)
+                    upload_data = cloudinary.uploader.upload(img_name, public_id=path)
+                    estate_image = EstateImage(
+                        estate=estate,
+                        image=upload_data['secure_url']
+                    )
+                    estate_image.save()
 
                 # ------------------- Create Post ---------------------#
                 user_instance = User.objects.get(id=user_id)

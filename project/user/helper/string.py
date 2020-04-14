@@ -7,6 +7,7 @@ REQUEST = 'request'
 TYPE = 'type'
 ID = 'id'
 
+IMAGE_SIZE_MAX_BYTES = 1024 * 1024 * 2  # 2MB
 MAX_INT = 99999999
 
 ITEMS_PER_PAGE = 25
