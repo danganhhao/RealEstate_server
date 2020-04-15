@@ -23,12 +23,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'ukvwja9-8ks8)ukpuifrrbeimko*&lcmwfsv1o5_5-wv2uo4j1'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['192.168.0.103', 'localhost', '127.0.0.1', '10.0.2.2']
+ALLOWED_HOSTS = [u'danganhhaotest.pythonanywhere.com']
 
 # Config cloudinary
 cloudinary.config(
+    api_proxy='http://proxy.server:3128',
     cloud_name='myrealestate',
     api_key='299479525615683',
     api_secret='z_NsgEdhVOBFenkmr__UPELR32c'
@@ -109,14 +110,31 @@ WSGI_APPLICATION = 'project.wsgi.application'
 #     }
 # }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'newrealestate',
+#         'USER': 'root',
+#         'PASSWORD': '123456',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#         'OPTIONS': {
+#             'sql_mode': 'TRADITIONAL',
+#             'charset': 'utf8',
+#             'init_command': 'SET '
+#                             'character_set_connection=utf8,'
+#                             'collation_connection=utf8_bin'
+#         }
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'newrealestate',
-        'USER': 'root',
-        'PASSWORD': '123456',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': 'danganhhaotest$realestate',
+        'USER': 'danganhhaotest',
+        'PASSWORD': 'anhhao0909',
+        'HOST': 'danganhhaotest.mysql.pythonanywhere-services.com',
         'OPTIONS': {
             'sql_mode': 'TRADITIONAL',
             'charset': 'utf8',
@@ -173,8 +191,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATIC_ROOT = '/home/danganhhaotest/RealEstate_server/project/static/'
 
 # Media Files
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+MEDIA_ROOT = '/home/danganhhaotest/RealEstate_server/project/media/'
 MEDIA_URL = '/media/'

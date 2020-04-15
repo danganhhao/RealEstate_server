@@ -29,7 +29,7 @@ class UserInfo(APIView):
     parser_classes = (MultiPartParser,)
     """
     /user/
-    Receive:  
+    Receive:
     """
 
     def get(self, request):
@@ -226,7 +226,7 @@ class Logout(APIView):
     user/logout
     :require token header
     :usage  API receive username, password
-    :return 
+    :return
     """
 
     def post(self, request):
