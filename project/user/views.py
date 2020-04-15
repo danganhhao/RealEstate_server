@@ -161,7 +161,7 @@ class Login(APIView):
         json_response['gender'] = user.gender
         json_response['birthday'] = str(user.birthday)
         json_response['address'] = user.address
-        json_response['avatar'] = get_image_url(request, user.avatar)
+        json_response['avatar'] = user.avatar
         json_response['phoneNumber'] = user.phoneNumber
         json_response['email'] = user.email
         json_response['identifyNumber'] = user.identifyNumber
