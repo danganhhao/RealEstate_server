@@ -18,7 +18,7 @@
 ________________
 15. Create database, initialize mysql (*******)
 16. MySQL password:
-This should be different to your main PythonAnywhere password, because it is likely to appear in plain text in any web applications you write. (anhhao0909)
+This should be different to your main PythonAnywhere password, because it is likely to appear in plain text in any web applications you write.
 
 17. update databases setting django
 18. import database
