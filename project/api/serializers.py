@@ -78,35 +78,15 @@ class DistrictSpecialSerializer(serializers.ModelSerializer):
 # ----------------------End get special location-----------------------
 
 
-class EstateImageSetterSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = EstateImage
-        fields = '__all__'
-
-
-class EstateImageGetterSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField('validate_image_url')
+class EstateImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EstateImage
         fields = ['image']
 
-    def validate_image_url(self, img):
-        image = img.image
-        if img.image:
-            new_url = img.image.url
-            if "?" in new_url:
-                new_url = settings.MEDIA_URL + image.url[:image.url.rfind("?")]
-            request = self.context.get('request')
-            new_url = request.build_absolute_uri(new_url)
-        else:
-            new_url = ""
-        return new_url
-
 
 class EstateSerializer(serializers.ModelSerializer):
-    images = EstateImageGetterSerializer(many=True, read_only=True)
+    images = EstateImageSerializer(many=True, read_only=True)
     province = serializers.SerializerMethodField('get_province')
     district = serializers.SerializerMethodField('get_district')
     project = serializers.SerializerMethodField('get_project')
@@ -143,7 +123,7 @@ class EstateSerializer(serializers.ModelSerializer):
 
 
 class EstateDetailSerializer(serializers.ModelSerializer):
-    images = EstateImageGetterSerializer(many=True, read_only=True)  # related_name = images
+    images = EstateImageSerializer(many=True, read_only=True)  # related_name = images
     estateType = serializers.SerializerMethodField('get_estateType')
     estateStatus = serializers.SerializerMethodField('get_estateStatus')
     project = serializers.SerializerMethodField('get_project')

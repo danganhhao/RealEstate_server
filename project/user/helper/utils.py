@@ -1,6 +1,4 @@
-import cv2
-import os
-
+from random import randint
 from django.core.exceptions import MultipleObjectsReturned
 from django.utils import timezone
 from django.conf import settings
@@ -32,18 +30,24 @@ def is_email_exist(email):
         return False
 
 
-def is_image_aspect_ratio_valid(img_url):
-    img = cv2.imread(img_url)
-    dimensions = tuple(img.shape[1::-1])  # return: (width, height)
-    aspect_ratio = dimensions[0] / dimensions[1]  # divide w/h
-    if aspect_ratio < 1:
-        return False
-    return True
+# Generate media path to upload image
+def uploadLocationUser(username, filename):
+    filePath = 'user/{user_name}/{filename}'.format(
+        user_name=str(username), filename=str(filename + randint(1, 100))
+    )
+    return filePath
 
 
-def is_image_size_valid(img_url, mb_limit):
-    img_size = os.path.getsize(img_url)
-    if img_size > mb_limit:
+# Generate media path to upload image
+def uploadLocationEstate(estate_id, filename):
+    filePath = 'estate/{estate_id}/{filename}'.format(
+        estate_id=str(estate_id), filename=str(filename + randint(1, 100))
+    )
+    return filePath
+
+
+def is_image_size_valid(size, mb_limit):
+    if size > mb_limit:
         return False
     return True
 

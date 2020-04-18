@@ -19,17 +19,17 @@ from user.helper.email_support import reset_password_email
 from user.models import *
 from user.serializers import UserSerializer
 
+import cloudinary.uploader
+
 
 # Create your views here.
-
-IMAGE_SIZE_MAX_BYTES = 1024 * 1024 * 2  # 2MB
 
 
 class UserInfo(APIView):
     parser_classes = (MultiPartParser,)
     """
     /user/
-    Receive:  
+    Receive:
     """
 
     def get(self, request):
@@ -100,26 +100,14 @@ class UserInfo(APIView):
                 return create_json_response(error_header, error_header, status_code=200)
 
             if avatar:
-                url = os.path.join(settings.MEDIA_ROOT, str(avatar))
-                storage = FileSystemStorage(location=url)
-
-                with storage.open('', 'wb+') as destination:
-                    for chunk in avatar.chunks():
-                        destination.write(chunk)
-                    destination.close()
-
-                # Check image size
-                if not is_image_size_valid(url, IMAGE_SIZE_MAX_BYTES):
-                    os.remove(url)
+                # ---- Check image size --------
+                if not is_image_size_valid(avatar.size, IMAGE_SIZE_MAX_BYTES):
                     error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
                     return create_json_response(error_header, error_header, status_code=200)
 
-                # Check image aspect ratio
-                if not is_image_aspect_ratio_valid(url):
-                    os.remove(url)
-                    error_header = {'error_code': EC_IMAGE_RATIO, 'error_message': EM_IMAGE_RATIO}
-                    return create_json_response(error_header, error_header, status_code=200)
-                os.remove(url)
+                path = uploadLocationUser(username, avatar.size)
+                upload_data = cloudinary.uploader.upload(avatar, public_id=path)
+                user.avatar = upload_data['secure_url']
 
             user.save()
 
@@ -173,7 +161,7 @@ class Login(APIView):
         json_response['gender'] = user.gender
         json_response['birthday'] = str(user.birthday)
         json_response['address'] = user.address
-        json_response['avatar'] = get_image_url(request, user.avatar)
+        json_response['avatar'] = user.avatar
         json_response['phoneNumber'] = user.phoneNumber
         json_response['email'] = user.email
         json_response['identifyNumber'] = user.identifyNumber
@@ -238,7 +226,7 @@ class Logout(APIView):
     user/logout
     :require token header
     :usage  API receive username, password
-    :return 
+    :return
     """
 
     def post(self, request):

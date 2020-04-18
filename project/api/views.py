@@ -5,7 +5,7 @@ from django.shortcuts import render
 
 # Create your views here.
 
-import json
+import cloudinary.uploader
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -30,7 +30,7 @@ class ProvinceInfo(APIView):
     """
     .../api/location
     :usage get all location
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -51,7 +51,7 @@ class ProvinceDetailInfo(APIView):
     parser_classes = (MultiPartParser,)
     """
     .../api/province/<id>
-    :return get a special province (Json format) 
+    :return get a special province (Json format)
     """
 
     def get_object(self, id):
@@ -74,7 +74,7 @@ class DistrictDetailInfo(APIView):
     parser_classes = (MultiPartParser,)
     """
     .../api/province/<p_id>/district/<d_id>
-    :return get a special district of a special province (Json format) 
+    :return get a special district of a special province (Json format)
     """
 
     def get_object(self, p_id, d_id):
@@ -102,7 +102,7 @@ class ProvinceSpecialInfo(APIView):
     """
     .../api/s/province
     :usage get all province, it only contains (id, name, code)
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -122,7 +122,7 @@ class DistrictSpecialInfo(APIView):
     .../api/s/district/<province_id>
     :param province_id
     :usage get all district of province_id, it only contains (id, name, prefix)
-    :return Json 
+    :return Json
     """
 
     def get(self, request, id):
@@ -142,7 +142,7 @@ class WardSpecialInfo(APIView):
     .../api/s/ward/<district_id>
     :param district_id
     :usage get all ward of district_id, it only contains (id, name, prefix)
-    :return Json 
+    :return Json
     """
 
     def get(self, request, id):
@@ -162,7 +162,7 @@ class StreetSpecialInfo(APIView):
     .../api/s/street/<district_id>
     :param district_id
     :usage get all street of district_id, it only contains (id, name, prefix)
-    :return Json 
+    :return Json
     """
 
     def get(self, request, id):
@@ -182,7 +182,7 @@ class ProjectSpecialInfo(APIView):
     .../api/s/project/<district_id>
     :param district_id
     :usage get all project of district_id, it only contains (id, name, lat, lng)
-    :return Json 
+    :return Json
     """
 
     def get(self, request, id):
@@ -203,7 +203,7 @@ class EstateTypeInfo(APIView):
     """
     .../api/estatetype
     :usage get all estate type
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -222,7 +222,7 @@ class EstateStatusInfo(APIView):
     """
     .../api/estatestatus
     :usage get all estate status
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -241,7 +241,7 @@ class ProjectInfo(APIView):
     """
     .../api/project
     :usage get all project
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -260,7 +260,7 @@ class TransactionTypeInfo(APIView):
     """
     .../api/transaction
     :usage get all project
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -281,9 +281,9 @@ class PostInfo(APIView):
     """
     .../api/post/
     create a post
-    :require user token 
-    :param:     
-    :return 
+    :require user token
+    :param:
+    :return
     """
     def post(self, request):
         try:
@@ -313,7 +313,6 @@ class PostInfo(APIView):
             contact = json_data.get('contact')  # required
             images = dict(json_data.lists()).get('image', [])
             transaction = json_data.get('transaction')  # required
-            print(images)
 
             try:
                 # ------------------- Create Estate ---------------------#
@@ -363,11 +362,18 @@ class PostInfo(APIView):
 
                 estate_id = estate.id
                 for img_name in images:
-                    modified_data = self.modify_input_for_multiple_files(estate_id, img_name)
-                    file_serializer = EstateImageSetterSerializer(data=modified_data)
-                    print(file_serializer)
-                    if file_serializer.is_valid():
-                        file_serializer.save()
+                    # ---- Check image size --------
+                    if not is_image_size_valid(img_name.size, IMAGE_SIZE_MAX_BYTES):
+                        error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
+                        return create_json_response(error_header, error_header, status_code=200)
+
+                    path = uploadLocationEstate(estate_id, img_name.size)
+                    upload_data = cloudinary.uploader.upload(img_name, public_id=path)
+                    estate_image = EstateImage(
+                        estate=estate,
+                        image=upload_data['secure_url']
+                    )
+                    estate_image.save()
 
                 # ------------------- Create Post ---------------------#
                 user_instance = User.objects.get(id=user_id)
@@ -404,7 +410,7 @@ class EstateInfo(APIView):
     """
         .../api/estate/
         return all estate
-        :return 
+        :return
     """
     def get(self, request):
         try:
@@ -431,7 +437,7 @@ class EstateDetailInfo(APIView):
     parser_classes = (MultiPartParser,)
     """
     .../api/estate/<id>
-    :return get a special estate (Json format) 
+    :return get a special estate (Json format)
     """
 
     def get_object(self, id):
@@ -456,7 +462,7 @@ class SortTypeInfo(APIView):
     """
     .../api/sorttype
     :usage get all sort type
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -475,7 +481,7 @@ class FilterMaxPriceInfo(APIView):
     """
     .../api/filtermaxprice
     :usage get all filter max price type
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -494,7 +500,7 @@ class FilterMinPriceInfo(APIView):
     """
     .../api/filterminprice
     :usage get all filter min price type
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -513,7 +519,7 @@ class FilterAreaInfo(APIView):
     """
     .../api/filterarea
     :usage get all filter area type
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -532,7 +538,7 @@ class FilterNumberOfRoomInfo(APIView):
     """
     .../api/filternumberofroom
     :usage get all filter number of room type
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -551,7 +557,7 @@ class FilterPostTimeInfo(APIView):
     """
     .../api/filterposttime
     :usage get all filter post time type
-    :return Json 
+    :return Json
     """
 
     def get(self, request):
@@ -569,7 +575,7 @@ class SearchEngine(APIView):
 
     """
         .../api/search/
-        :return estate list with parameters 
+        :return estate list with parameters
     """
 
     def post(self, request):
@@ -669,4 +675,5 @@ class SearchEngine(APIView):
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
+
 
