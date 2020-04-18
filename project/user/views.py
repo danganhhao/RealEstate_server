@@ -124,31 +124,59 @@ class UserInfo(APIView):
         Modify a existed user
         Receive: token
     """
-    # def put(self, request):
-    #     try:
-    #         error_header, status_code = Authentication().authentication(request, type_token='user')
-    #         if error_header['error_code']:
-    #             return create_json_response(error_header, error_header, status_code=status_code)
-    #
-    #         id = error_header['id']
-    #         try:
-    #             if id:
-    #                 user = User.objects.get(id=id)
-    #                 # TODO Modify data at here
-    #                 error_header = {'error_code': EC_SUCCESS, 'error_message': 'success'}
-    #                 return create_json_response(error_header, error_header, status_code=200)
-    #
-    #         except UserToken.DoesNotExist:
-    #             error_header = {'error_code': EC_FAIL, 'error_message': 'Logout fail'}
-    #             return create_json_response(error_header, error_header, status_code=200)
-    #     except KeyError:
-    #         error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
-    #         return create_json_response(error_header, error_header, status_code=200)
-    #
-    #     except Exception as e:
-    #         print(e)
-    #         error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
-    #         return create_json_response(error_header, error_header, status_code=200)
+    def put(self, request):
+        try:
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code']:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            json_data = request.data
+            address = json_data.get('address', None)
+            phoneNumber = json_data.get('phoneNumber', None)
+            identifyNumber = json_data.get('identifyNumber', None)
+            birthday = json_data.get('birthday', None)
+            avatar = json_data.get('avatar', None)
+
+            if birthday:
+                birthday = datetime.strptime(birthday, '%d/%m/%Y')
+            else:
+                birthday = datetime.strptime('01/01/1900', '%d/%m/%Y')
+
+            id = error_header['id']
+            try:
+                if id:
+                    user = User.objects.get(id=id)
+                    user.address = address
+                    user.birthday = birthday
+                    user.phoneNumber = phoneNumber
+                    user.identifyNumber = identifyNumber
+
+                    if avatar:
+                        # ---- Check image size --------
+                        if not is_image_size_valid(avatar.size, IMAGE_SIZE_MAX_BYTES):
+                            error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
+                            return create_json_response(error_header, error_header, status_code=200)
+
+                        path = uploadLocationUser(user.username, avatar.size)
+                        upload_data = cloudinary.uploader.upload(avatar, public_id=path)
+                        user.avatar = upload_data['secure_url']
+
+                    user.save()
+
+                    error_header = {'error_code': EC_SUCCESS, 'error_message': 'success'}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+            except UserToken.DoesNotExist:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'User not exist'}
+                return create_json_response(error_header, error_header, status_code=200)
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
 
 
 class Login(APIView):
