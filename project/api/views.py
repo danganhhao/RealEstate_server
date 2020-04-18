@@ -299,7 +299,8 @@ class PostInfo(APIView):
             json_data = request.data
             title = json_data.get('title')  # required
             estateType = json_data.get('estateType')  # required
-            estateStatus = json_data.get('estateStatus')  # required
+            expire_after = json_data.get('expireAfter')  # required
+            # estateStatus = json_data.get('estateStatus')  # required
             project = json_data.get('project', None)
             province = json_data.get('province')  # required
             district = json_data.get('district')  # required
@@ -310,7 +311,7 @@ class PostInfo(APIView):
             detail = json_data.get('detail')
             price = json_data.get('price', "")
             area = json_data.get('area', "")
-            contact = json_data.get('contact')  # required
+            contact = json_data.get('contact', "")
             images = dict(json_data.lists()).get('image', [])
             transaction = json_data.get('transaction')  # required
 
@@ -322,9 +323,10 @@ class PostInfo(APIView):
                 ward_instance = None
                 street_instance = None
                 estateType_instance = EstateType.objects.get(id=estateType)
-                estateStatus_instance = EstateStatus.objects.get(id=estateStatus)
+                estateStatus_instance = EstateStatus.objects.get(id=10)
                 province_instance = Province.objects.get(id=province)
                 district_instance = District.objects.get(id=district)
+                expireDays = int(expire_after)
                 if project:
                     project_instance = Project.objects.get(id=project)
                 if ward:
@@ -337,6 +339,8 @@ class PostInfo(APIView):
                     price = 0
                 if area == "":
                     area = 0
+                if expireDays > 90:
+                    expireDays = 90
 
                 # ------------------------------------------------#
                 estate = Estate(
@@ -363,17 +367,18 @@ class PostInfo(APIView):
                 estate_id = estate.id
                 for img_name in images:
                     # ---- Check image size --------
-                    if not is_image_size_valid(img_name.size, IMAGE_SIZE_MAX_BYTES):
-                        error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
-                        return create_json_response(error_header, error_header, status_code=200)
+                    if img_name:
+                        if not is_image_size_valid(img_name.size, IMAGE_SIZE_MAX_BYTES):
+                            error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
+                            return create_json_response(error_header, error_header, status_code=200)
 
-                    path = uploadLocationEstate(estate_id, img_name.size)
-                    upload_data = cloudinary.uploader.upload(img_name, public_id=path)
-                    estate_image = EstateImage(
-                        estate=estate,
-                        image=upload_data['secure_url']
-                    )
-                    estate_image.save()
+                        path = uploadLocationEstate(estate_id, img_name.size)
+                        upload_data = cloudinary.uploader.upload(img_name, public_id=path)
+                        estate_image = EstateImage(
+                            estate=estate,
+                            image=upload_data['secure_url']
+                        )
+                        estate_image.save()
 
                 # ------------------- Create Post ---------------------#
                 user_instance = User.objects.get(id=user_id)
@@ -383,7 +388,7 @@ class PostInfo(APIView):
                     estate=estate,
                     transaction=transaction_instance,
                     dateFrom=timezone.now(),
-                    dateTo=(timezone.now() + timezone.timedelta(days=30))
+                    dateTo=(timezone.now() + timezone.timedelta(days=expireDays))
                 )
                 new_post.save()
 
@@ -450,6 +455,30 @@ class EstateDetailInfo(APIView):
         try:
             estate = self.get_object(id)
             serializer = EstateDetailSerializer(estate, context={"request": request})
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class PostDetailInfo(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    .../api/estate/<id>
+    :return get a special estate (Json format)
+    """
+
+    def get_object(self, id):
+        try:
+            estate = Estate.objects.get(id=id)
+            return Post.objects.get(estate=estate)
+        except Post.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def get(self, request, id):
+        try:
+            estate = self.get_object(id)
+            serializer = PostSerializer(estate, context={"request": request})
             return Response(serializer.data)
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}

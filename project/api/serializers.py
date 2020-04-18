@@ -2,6 +2,8 @@ from rest_framework import serializers
 from api.models import *
 from django.conf import settings
 
+from user.serializers import UserPostSerializer
+
 
 class EstateTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -125,7 +127,7 @@ class EstateSerializer(serializers.ModelSerializer):
 class EstateDetailSerializer(serializers.ModelSerializer):
     images = EstateImageSerializer(many=True, read_only=True)  # related_name = images
     estateType = serializers.SerializerMethodField('get_estateType')
-    estateStatus = serializers.SerializerMethodField('get_estateStatus')
+    # estateStatus = serializers.SerializerMethodField('get_estateStatus')
     project = serializers.SerializerMethodField('get_project')
     province = serializers.SerializerMethodField('get_province')
     district = serializers.SerializerMethodField('get_district')
@@ -134,7 +136,9 @@ class EstateDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Estate
-        fields = '__all__'
+        fields = ['id', 'images', 'estateType', 'project', 'province', 'district', 'ward', 'street',
+                  'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact']
+        # fields = '__all__'
 
     def get_estateType(self, estate):
         if estate.estateType:
@@ -178,9 +182,13 @@ class EstateDetailSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
+    estate = EstateDetailSerializer()
+    user = UserPostSerializer()
+
     class Meta:
         model = Post
-        fields = '__all__'
+        fields = ['user', 'estate', 'dateFrom', 'dateTo']
+        # fields = '__all__'
 
 
 class InterestSerializer(serializers.ModelSerializer):
