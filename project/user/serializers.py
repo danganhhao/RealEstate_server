@@ -16,6 +16,13 @@ class UserSerializer(serializers.ModelSerializer):
         # fields = '__all__'
 
 
+# For post
+class UserPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('name', 'email', 'phoneNumber')
+
+
 class UserTokenSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserToken
