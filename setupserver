@@ -1,0 +1,31 @@
+1. Open bash console
+2. check path (pwd), clone git
+3. create virtual envinroment (mkvirtualenv --python=/usr/bin/python3.8 myenv)
+4. active myenv
+5. pip install django
+6. open new window. Click Web
+7.  If you already have an app you want to use, use the Manual config section instead
+8. choose python version
+9. Done. Continue set virtualenv
+10. edit WSGI configuration file, edit path /home/danganhhaotest/RealEstate_server
+11. set DJANGO_SETTINGS_MODULE 
+12. pip install -r requirements.txt
+13. add ALLOWED_HOSTS (danganhhaotest.pythonanywhere.com)
+    edit static root, media root
+	/home/danganhhaotest/RealEstate_server/project/media/
+	/home/danganhhaotest/RealEstate_server/project/static/
+14. edit path (url(r'^api/', include('user.urls', namespace='api')),))
+________________
+15. Create database, initialize mysql (*******)
+16. MySQL password:
+This should be different to your main PythonAnywhere password, because it is likely to appear in plain text in any web applications you write.
+
+17. update databases setting django
+18. import database
+upload local database to 
+https://help.pythonanywhere.com/pages/ImportingYourLocalDatabaseToPythonAnywhere/
+https://help.pythonanywhere.com/pages/MySQLBackupRestore
+use yourusername$yourdatabasename; source yourbackupname.sql;
+use anhhaotest$realestate; source db_v3.sql;
+
+
