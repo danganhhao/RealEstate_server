@@ -131,6 +131,7 @@ class UserInfo(APIView):
                 return create_json_response(error_header, error_header, status_code=status_code)
 
             json_data = request.data
+            email = json_data.get('email', None)
             address = json_data.get('address', None)
             phoneNumber = json_data.get('phoneNumber', None)
             identifyNumber = json_data.get('identifyNumber', None)
@@ -146,10 +147,16 @@ class UserInfo(APIView):
             try:
                 if id:
                     user = User.objects.get(id=id)
-                    user.address = address
-                    user.birthday = birthday
-                    user.phoneNumber = phoneNumber
-                    user.identifyNumber = identifyNumber
+                    if email is not None:
+                        user.email = email
+                    if address is not None:
+                        user.address = address
+                    if birthday is not None:
+                        user.birthday = birthday
+                    if phoneNumber is not None:
+                        user.phoneNumber = phoneNumber
+                    if identifyNumber is not None:
+                        user.identifyNumber = identifyNumber
 
                     if avatar:
                         # ---- Check image size --------
