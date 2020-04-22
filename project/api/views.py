@@ -414,6 +414,149 @@ class PostInfo(APIView):
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
+    """
+    .../api/post/
+    modify a post
+    :require user token
+    :return
+    """
+
+    def put(self, request):
+        try:
+            # ------------------- Authentication User ---------------------#
+
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code']:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            # ------------------- Get Parameters ---------------------#
+            user_id = error_header['id']
+
+            json_data = request.data
+            estate_id = json_data.get('id')  # require
+            title = json_data.get('title', None)
+            estateType = json_data.get('estateType', None)
+            expire_after = json_data.get('expireAfter', None)
+            project = json_data.get('project', None)
+            province = json_data.get('province', None)
+            district = json_data.get('district', None)
+            ward = json_data.get('ward', None)
+            street = json_data.get('street', None)
+            address_detail = json_data.get('addressDetail', None)
+            numberOfRoom = json_data.get('numberOfRoom', None)
+            description = json_data.get('description', None)
+            detail = json_data.get('detail', None)
+            price = json_data.get('price', None)
+            area = json_data.get('area', None)
+            contact = json_data.get('contact', None)
+            new_images = dict(json_data.lists()).get('newImage', [])
+            old_images = dict(json_data.lists()).get('oldImage', [])
+            transaction = json_data.get('transaction', None)
+            lat = json_data.get('lat', None)
+            lng = json_data.get('lng', None)
+
+            try:
+                # ------------------- Modify Estate ---------------------#
+                estate = Estate.objects.get(id=estate_id)
+                if estate:
+                    if title is not None:
+                        estate.title = title
+                    if estateType is not None:
+                        estateType_instance = EstateType.objects.get(id=estateType)
+                        estate.estateType = estateType_instance
+                    if project is not None:
+                        project_instance = Project.objects.get(id=project)
+                        estate.project = project_instance
+                    if province is not None:
+                        province_instance = Province.objects.get(id=province)
+                        estate.province = province_instance
+                    if district is not None:
+                        district_instance = District.objects.get(id=district)
+                        estate.district = district_instance
+                    if ward is not None:
+                        ward_instance = Ward.objects.get(id=ward)
+                        estate.ward = ward_instance
+                    if street is not None:
+                        street_instance = Street.objects.get(id=street)
+                        estate.street = street_instance
+                    if address_detail is not None:
+                        estate.addressDetail = address_detail
+                    if numberOfRoom is not None:
+                        estate.numberOfRoom = numberOfRoom
+                    if description is not None:
+                        estate.description = description
+                    if detail is not None:
+                        estate.detail = detail
+                    if price is not None:
+                        estate.price = price
+                    if area is not None:
+                        estate.area = area
+                    if contact is not None:
+                        estate.contact = contact
+                    if lat is not None:
+                        estate.lat = lat
+                    if lng is not None:
+                        estate.lng = lng
+
+                    # ------------------- Modify Image ---------------------#
+                    # ------------------- Delete Old Image ---------------------#
+                    for img_id in old_images:
+                        if img_id:
+                            img_obj = EstateImage.objects.get(id=img_id)
+                            url = img_obj.image
+                            temp = url.index('/estate/')
+                            temp_url = url[temp:]
+                            endIndex = temp_url.index('.')
+                            public_id = temp_url[1:endIndex]
+                            cloudinary.uploader.destroy(public_id)
+                            img_obj.delete()
+
+                    # ------------------- Add New Image ---------------------#
+                    estate_id = estate.id
+                    for img_name in new_images:
+                        # ---- Check image size --------
+                        if img_name:
+                            if not is_image_size_valid(img_name.size, IMAGE_SIZE_MAX_BYTES):
+                                error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
+                                return create_json_response(error_header, error_header, status_code=200)
+
+                            path = uploadLocationEstate(estate_id, img_name.size)
+                            upload_data = cloudinary.uploader.upload(img_name, public_id=path)
+                            estate_image = EstateImage(
+                                estate=estate,
+                                image=upload_data['secure_url']
+                            )
+                            estate_image.save()
+
+                    # ------------------------------------------------#
+                    # ------------------- Modify Post ---------------------#
+                    # user_instance = User.objects.get(id=user_id)
+                    post_obj = Post.objects.get(estate=estate)
+                    if transaction is not None:
+                        transaction_instance = TransactionType.objects.get(id=transaction)
+                        post_obj.transaction = transaction_instance
+                    if expire_after is not None:
+                        expireDays = int(expire_after)
+                        if expireDays > 90:
+                            expireDays = 90
+                        post_obj.dateTo = (post_obj.dateFrom + timezone.timedelta(days=expireDays))
+                    post_obj.save()
+
+                    error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                    return create_json_response(error_header, error_header, status_code=200)
+            except Estate.DoesNotExist:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'Estate not exist'}
+                return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
 
 class EstateInfo(APIView):
     parser_classes = (MultiPartParser,)

@@ -170,7 +170,7 @@ class UserInfo(APIView):
                             temp_url = user.avatar[temp:]
                             endIndex = temp_url.index('.')
                             public_id = temp_url[:endIndex]
-                            r = cloudinary.uploader.destroy(public_id)
+                            cloudinary.uploader.destroy(public_id)
 
                         # ---- Create new avatar ------
                         path = uploadLocationUser(user.username, avatar.size)
