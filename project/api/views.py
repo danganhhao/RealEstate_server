@@ -420,7 +420,7 @@ class EstateInfo(APIView):
     def get(self, request):
         try:
             page = request.GET.get('page', 1)
-            estate = Estate.objects.all().order_by('id')
+            estate = Estate.objects.all().order_by('-id')
             paginator = Paginator(estate, ITEMS_PER_PAGE, allow_empty_first_page=True)
             try:
                 estate_obj = paginator.page(page)
@@ -621,7 +621,7 @@ class SearchEngine(APIView):
             m_filter_number_of_room = json_data.get('filter_number_of_room', None)
             m_filter_post_time = json_data.get('filter_post_time', None)
 
-            estate = Estate.objects.all()
+            estate = Estate.objects.all().order_by('-id')
             # --------------- Filter estate type ------------------
             if m_estate_type is not None and m_estate_type != "":
                 estate = estate.filter(estateType=m_estate_type)
