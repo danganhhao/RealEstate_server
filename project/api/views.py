@@ -280,6 +280,52 @@ class PostInfo(APIView):
 
     """
     .../api/post/
+    get all posts of current user
+    :require user token
+    :param:
+    :return
+    """
+    def get(self, request):
+        try:
+            # ------------------- Authentication User ---------------------#
+
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code']:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            user_id = error_header['id']
+            page = request.GET.get('page', 1)
+            try:
+                user_instance = User.objects.get(id=user_id)
+                post_obj = Post.objects.filter(user=user_instance)
+                paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
+                try:
+                    post_sub_obj = paginator.page(page)
+                    serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True)
+                    result = {}
+                    result['current_page'] = str(page)
+                    result['total_page'] = str(paginator.num_pages)
+                    result['result'] = serializer.data
+                    return Response(result)
+                except EmptyPage:
+                    error_header = {'error_code': EC_FAIL, 'error_message': 'fail - index out of range'}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+            except EstateType.DoesNotExist:
+                error_header = {'error_code': EC_FAIL, 'error_message': ' fail'}
+                return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+    """
+    .../api/post/
     create a post
     :require user token
     :param:
@@ -541,7 +587,7 @@ class PostInfo(APIView):
                             expireDays = 90
                         post_obj.dateTo = (post_obj.dateFrom + timezone.timedelta(days=expireDays))
                     post_obj.save()
-
+                    estate.save()
                     error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
                     return create_json_response(error_header, error_header, status_code=200)
             except Estate.DoesNotExist:
@@ -627,7 +673,7 @@ class PostDetailInfo(APIView):
     def get(self, request, id):
         try:
             estate = self.get_object(id)
-            serializer = PostSerializer(estate, context={"request": request})
+            serializer = PostDetailSerializer(estate, context={"request": request})
             return Response(serializer.data)
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}

@@ -181,7 +181,7 @@ class EstateDetailSerializer(serializers.ModelSerializer):
         return ""
 
 
-class PostSerializer(serializers.ModelSerializer):
+class PostDetailSerializer(serializers.ModelSerializer):
     estate = EstateDetailSerializer()
     user = UserPostSerializer()
 
@@ -189,6 +189,14 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ['user', 'estate', 'dateFrom', 'dateTo']
         # fields = '__all__'
+
+
+class PostSerializer(serializers.ModelSerializer):
+    estate = EstateDetailSerializer()
+
+    class Meta:
+        model = Post
+        fields = ['estate', 'dateFrom', 'dateTo']
 
 
 class InterestSerializer(serializers.ModelSerializer):
