@@ -95,7 +95,7 @@ class EstateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Estate
-        fields = ['id', 'title', 'images', 'province', 'district', 'contact', 'project']
+        fields = ['id', 'title', 'images', 'province', 'district', 'contact', 'project', 'area', 'price', 'created_day']
 
     # def get_a_image(self, estate):
     #     img = EstateImage.objects.filter(estate=estate.id).first()
@@ -136,8 +136,8 @@ class EstateDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Estate
-        fields = ['id', 'images', 'estateType', 'project', 'province', 'district', 'ward', 'street',
-                  'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact']
+        fields = ['id', 'images', 'estateType', 'project', 'province', 'district', 'ward', 'street', 'addressDetail',
+                  'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact', 'lat', 'lng']
         # fields = '__all__'
 
     def get_estateType(self, estate):

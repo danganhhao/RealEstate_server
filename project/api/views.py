@@ -306,6 +306,7 @@ class PostInfo(APIView):
             district = json_data.get('district')  # required
             ward = json_data.get('ward', None)
             street = json_data.get('street', None)
+            address_detail = json_data.get('addressDetail', "")
             numberOfRoom = json_data.get('numberOfRoom', "")
             description = json_data.get('description')  # required
             detail = json_data.get('detail')
@@ -314,6 +315,8 @@ class PostInfo(APIView):
             contact = json_data.get('contact', "")
             images = dict(json_data.lists()).get('image', [])
             transaction = json_data.get('transaction')  # required
+            lat = json_data.get('lat', "")
+            lng = json_data.get('lng', "")
 
             try:
                 # ------------------- Create Estate ---------------------#
@@ -351,6 +354,7 @@ class PostInfo(APIView):
                     province=province_instance,
                     district=district_instance,
                     ward=ward_instance,
+                    addressDetail=address_detail,
                     street=street_instance,
                     numberOfRoom=numberOfRoom,
                     description=description,
@@ -358,7 +362,9 @@ class PostInfo(APIView):
                     price=price,
                     area=area,
                     contact=contact,
-                    created_day=timezone.now()
+                    created_day=timezone.now(),
+                    lat=lat,
+                    lng=lng
                 )
                 estate.save()
 

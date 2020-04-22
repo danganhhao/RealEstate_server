@@ -114,6 +114,7 @@ class Estate(models.Model):
     district = models.ForeignKey(District, on_delete=models.CASCADE, null=True, blank=True)
     ward = models.ForeignKey(Ward, on_delete=models.CASCADE, null=True, blank=True)
     street = models.ForeignKey(Street, on_delete=models.CASCADE, null=True, blank=True)
+    addressDetail = models.CharField(max_length=100, null=True, blank=True)
     numberOfRoom = models.IntegerField()
     description = models.TextField(max_length=5000, null=True, blank=True)
     detail = models.TextField(max_length=5000, null=True, blank=True)
@@ -121,6 +122,8 @@ class Estate(models.Model):
     area = models.FloatField()
     contact = models.CharField(max_length=100)
     created_day = models.DateTimeField()
+    lat = models.CharField(max_length=50, null=True, blank=True)
+    lng = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):
         return str(self.id)
