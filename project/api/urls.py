@@ -32,6 +32,7 @@ urlpatterns = [
     path('filterarea/', FilterAreaInfo.as_view(), name='filter_area'),
     path('filternumberofroom/', FilterNumberOfRoomInfo.as_view(), name='filter_number_of_room'),
     path('filterposttime/', FilterPostTimeInfo.as_view(), name='filter_post_time'),
-    path('search/', SearchEngine.as_view(), name='search')
+    path('search/', SearchEngine.as_view(), name='search'),
+    url(r'^favorite/$', FavoriteInfo.as_view(), name='favorite'),
 
 ]
