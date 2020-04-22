@@ -358,3 +358,48 @@ class ResetPassword(APIView):
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
+
+class ChangePassword(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    user/password
+    change user password
+    :require token header
+    :return
+    """
+
+    def put(self, request):
+        try:
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code']:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            m_id = error_header['id']
+            json_data = request.data
+            old_password = json_data.get('oldPassword')
+            new_password = json_data.get('newPassword')
+            try:
+                if m_id:
+                    user = User.objects.get(id=m_id)
+                    if check_password(old_password, user.password):
+                        user.password = make_password(new_password)
+                        user.save()
+                        error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                        return create_json_response(error_header, error_header, status_code=200)
+                    else:
+                        error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + 'Old password not matched'}
+                        return create_json_response(error_header, error_header, status_code=200)
+
+            except User.DoesNotExist:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'Not found account'}
+                return create_json_response(error_header, error_header, status_code=200)
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
