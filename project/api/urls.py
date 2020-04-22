@@ -21,7 +21,8 @@ urlpatterns = [
     path('estatestatus/', EstateStatusInfo.as_view(), name='estate_status'),
     path('project/', ProjectInfo.as_view(), name='project'),
     path('transaction/', TransactionTypeInfo.as_view(), name='transaction'),
-    path('post/', PostInfo.as_view(), name='post'),
+    # path('post/$', PostInfo.as_view(), name='post'),
+    url(r'^post/$', PostInfo.as_view(), name='post'),
     url(r'^estate/$', EstateInfo.as_view(), name='estate'),
     # path('estate/$', EstateInfo.as_view(), name='estate'),
     path('estate/<int:id>', PostDetailInfo.as_view(), name='estate_detail'),
@@ -31,6 +32,7 @@ urlpatterns = [
     path('filterarea/', FilterAreaInfo.as_view(), name='filter_area'),
     path('filternumberofroom/', FilterNumberOfRoomInfo.as_view(), name='filter_number_of_room'),
     path('filterposttime/', FilterPostTimeInfo.as_view(), name='filter_post_time'),
-    path('search/', SearchEngine.as_view(), name='search')
+    path('search/', SearchEngine.as_view(), name='search'),
+    url(r'^favorite/$', FavoriteInfo.as_view(), name='favorite'),
 
 ]

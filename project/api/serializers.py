@@ -84,7 +84,7 @@ class EstateImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = EstateImage
-        fields = ['image']
+        fields = ['id', 'image']
 
 
 class EstateSerializer(serializers.ModelSerializer):
@@ -95,7 +95,7 @@ class EstateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Estate
-        fields = ['id', 'title', 'images', 'province', 'district', 'contact', 'project']
+        fields = ['id', 'title', 'images', 'province', 'district', 'contact', 'project', 'area', 'price', 'created_day']
 
     # def get_a_image(self, estate):
     #     img = EstateImage.objects.filter(estate=estate.id).first()
@@ -136,8 +136,8 @@ class EstateDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Estate
-        fields = ['id', 'images', 'estateType', 'project', 'province', 'district', 'ward', 'street',
-                  'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact']
+        fields = ['id', 'images', 'estateType', 'project', 'province', 'district', 'ward', 'street', 'addressDetail',
+                  'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact', 'lat', 'lng']
         # fields = '__all__'
 
     def get_estateType(self, estate):
@@ -181,7 +181,7 @@ class EstateDetailSerializer(serializers.ModelSerializer):
         return ""
 
 
-class PostSerializer(serializers.ModelSerializer):
+class PostDetailSerializer(serializers.ModelSerializer):
     estate = EstateDetailSerializer()
     user = UserPostSerializer()
 
@@ -191,10 +191,20 @@ class PostSerializer(serializers.ModelSerializer):
         # fields = '__all__'
 
 
+class PostSerializer(serializers.ModelSerializer):
+    estate = EstateDetailSerializer()
+
+    class Meta:
+        model = Post
+        fields = ['estate', 'dateFrom', 'dateTo']
+
+
 class InterestSerializer(serializers.ModelSerializer):
+    estate = EstateDetailSerializer()
+
     class Meta:
         model = Interest
-        fields = '__all__'
+        fields = ['estate']
 
 
 class FilterMaxPriceSerializer(serializers.ModelSerializer):
