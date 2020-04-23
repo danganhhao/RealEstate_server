@@ -127,7 +127,7 @@ class UserInfo(APIView):
     def put(self, request):
         try:
             error_header, status_code = Authentication().authentication(request, type_token='user')
-            if error_header['error_code']:
+            if error_header['error_code'] == 0:
                 return create_json_response(error_header, error_header, status_code=status_code)
 
             json_data = request.data
@@ -221,8 +221,8 @@ class Login(APIView):
     def post(self, request):
         try:
             error_header, status_code = Authentication().authentication(request, type_token='user')
-
-            if error_header['error_code']:  # Login with username and password
+            print(error_header)
+            if error_header['error_code'] == 0:  # Login with username and password
                 json_data = request.data
                 username = json_data['username']
                 password = json_data['password']
@@ -276,7 +276,7 @@ class Logout(APIView):
     def post(self, request):
         try:
             error_header, status_code = Authentication().authentication(request, type_token='user')
-            if error_header['error_code']:
+            if error_header['error_code'] == 0:
                 return create_json_response(error_header, error_header, status_code=status_code)
 
             # token = get_token(request)
@@ -380,7 +380,7 @@ class ChangePassword(APIView):
     def put(self, request):
         try:
             error_header, status_code = Authentication().authentication(request, type_token='user')
-            if error_header['error_code']:
+            if error_header['error_code'] == 0:
                 return create_json_response(error_header, error_header, status_code=status_code)
 
             m_id = error_header['id']
