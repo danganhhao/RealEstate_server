@@ -204,8 +204,8 @@ class InterestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Interest
-        # fields = ['estate']
-        fields = '__all__'
+        fields = ['estate']
+        # fields = '__all__'
 
 
 class FilterMaxPriceSerializer(serializers.ModelSerializer):
@@ -248,3 +248,29 @@ class SortTypeSerializer(serializers.ModelSerializer):
         model = SortType
         fields = ('id', 'name')
         # fields = '__all__'
+
+
+class NewsTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NewsType
+        fields = '__all__'
+
+
+class NewsImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NewsImage
+        fields = ['id', 'image', 'description']
+
+
+class NewsSerializer(serializers.ModelSerializer):
+    images = NewsImageSerializer(many=True, read_only=True)  # related_name = images
+    newsType = serializers.SerializerMethodField('get_newsType')
+
+    class Meta:
+        model = News
+        fields = ['id', 'title', 'subTitle', 'content', 'newsType', 'images']
+
+    def get_newsType(self, news):
+        if news.newsType:
+            return news.newsType.name
+        return ""

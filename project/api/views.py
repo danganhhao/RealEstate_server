@@ -290,30 +290,52 @@ class PostInfo(APIView):
             # ------------------- Authentication User ---------------------#
 
             error_header, status_code = Authentication().authentication(request, type_token='user')
-            if error_header['error_code'] == 0:
-                return create_json_response(error_header, error_header, status_code=status_code)
-
-            user_id = error_header['id']
-            page = request.GET.get('page', 1)
-            try:
-                user_instance = User.objects.get(id=user_id)
-                post_obj = Post.objects.filter(user=user_instance)
-                paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
+            if error_header['error_code'] == 0:  # get posts with id
+                json_data = request.data
+                user_id = json_data.get('id')  # required
+                page = request.GET.get('page', 1)
                 try:
-                    post_sub_obj = paginator.page(page)
-                    serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True)
-                    result = {}
-                    result['current_page'] = str(page)
-                    result['total_page'] = str(paginator.num_pages)
-                    result['result'] = serializer.data
-                    return Response(result)
-                except EmptyPage:
-                    error_header = {'error_code': EC_FAIL, 'error_message': 'fail - index out of range'}
+                    user_instance = User.objects.get(id=user_id)
+                    post_obj = Post.objects.filter(user=user_instance)
+                    paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
+                    try:
+                        post_sub_obj = paginator.page(page)
+                        serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True)
+                        result = {}
+                        result['current_page'] = str(page)
+                        result['total_page'] = str(paginator.num_pages)
+                        result['result'] = serializer.data
+                        return Response(result)
+                    except EmptyPage:
+                        error_header = {'error_code': EC_FAIL, 'error_message': 'fail - index out of range'}
+                        return create_json_response(error_header, error_header, status_code=200)
+
+                except EstateType.DoesNotExist:
+                    error_header = {'error_code': EC_FAIL, 'error_message': 'User not exist'}
                     return create_json_response(error_header, error_header, status_code=200)
 
-            except EstateType.DoesNotExist:
-                error_header = {'error_code': EC_FAIL, 'error_message': ' fail'}
-                return create_json_response(error_header, error_header, status_code=200)
+            else:  # get posts with token
+                user_id = error_header['id']
+                page = request.GET.get('page', 1)
+                try:
+                    user_instance = User.objects.get(id=user_id)
+                    post_obj = Post.objects.filter(user=user_instance)
+                    paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
+                    try:
+                        post_sub_obj = paginator.page(page)
+                        serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True)
+                        result = {}
+                        result['current_page'] = str(page)
+                        result['total_page'] = str(paginator.num_pages)
+                        result['result'] = serializer.data
+                        return Response(result)
+                    except EmptyPage:
+                        error_header = {'error_code': EC_FAIL, 'error_message': 'fail - index out of range'}
+                        return create_json_response(error_header, error_header, status_code=200)
+
+                except User.DoesNotExist:
+                    error_header = {'error_code': EC_FAIL, 'error_message': 'User not exist'}
+                    return create_json_response(error_header, error_header, status_code=200)
 
         except KeyError:
             error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
@@ -1034,3 +1056,99 @@ class FavoriteInfo(APIView):
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
+
+class NewsInfo(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    .../api/news/?page=<int>
+    :return get all the news
+    """
+
+    def get(self, request):
+        try:
+            page = request.GET.get('page', 1)
+            news = News.objects.all().order_by('-id')
+            paginator = Paginator(news, ITEMS_PER_PAGE, allow_empty_first_page=True)
+            try:
+                news_obj = paginator.page(page)
+                serializer = NewsSerializer(news_obj, context={"request": request}, many=True)
+                result = {}
+                result['current_page'] = page
+                result['total_page'] = str(paginator.num_pages)
+                result['result'] = serializer.data
+                return Response(result)
+            except EmptyPage:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'fail - index out of range'}
+                return create_json_response(error_header, error_header, status_code=200)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+    """
+    .../api/news/
+    create a new news
+    :require user token
+    :param:
+    :return
+    """
+    def post(self, request):
+        try:
+            # TODO: Require password for admin
+
+            # ------------------- Get Parameters ---------------------#
+            json_data = request.data
+            title = json_data.get('title')  # required
+            sub_title = json_data.get('subTitle', None)
+            content = json_data.get('content', None)
+            newsType = json_data.get('newsType')
+            images = dict(json_data.lists()).get('image', [])
+            images_description = dict(json_data.lists()).get('imageDescription', [])
+
+            try:
+                # ------------------- Create News ---------------------#
+                # ------------------- Normalizer data -------------------#
+                newsType_instance = NewsType.objects.get(id=newsType)
+                # ------------------------------------------------#
+                news = News(
+                    title=title,
+                    subTitle=sub_title,
+                    content=content,
+                    newsType=newsType_instance
+                )
+                news.save()
+
+                # ------------------- Create Image ---------------------#
+                news_id = news.id
+                i = 0
+                for img_name in images:
+                    # ---- Check image size --------
+                    if img_name:
+                        if not is_image_size_valid(img_name.size, IMAGE_SIZE_MAX_BYTES):
+                            error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
+                            return create_json_response(error_header, error_header, status_code=200)
+
+                        path = uploadLocationNews(news_id, img_name.size)
+                        upload_data = cloudinary.uploader.upload(img_name, public_id=path)
+                        news_image = NewsImage(
+                            news=news,
+                            image=upload_data['secure_url'],
+                            description=images_description[i]
+                        )
+                        news_image.save()
+                        i = i + 1
+
+                error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                return create_json_response(error_header, error_header, status_code=200)
+
+            except EstateType.DoesNotExist:
+                error_header = {'error_code': EC_FAIL, 'error_message': ' fail'}
+                return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)

@@ -46,6 +46,14 @@ def uploadLocationEstate(estate_id, filename):
     return filePath
 
 
+# Generate media path to upload image for news
+def uploadLocationNews(news_id, filename):
+    filePath = 'news/{news_id}/{filename}'.format(
+        news_id=str(news_id), filename=str(filename + randint(1, 100))
+    )
+    return filePath
+
+
 def is_image_size_valid(size, mb_limit):
     if size > mb_limit:
         return False

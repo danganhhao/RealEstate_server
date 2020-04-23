@@ -212,3 +212,32 @@ class SortType(models.Model):
 
     def __str__(self):
         return self.name
+
+
+# News Type table (ex:  Normal,...)
+class NewsType(models.Model):
+    name = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
+
+# News table: describe an news information
+class News(models.Model):
+    title = models.CharField(max_length=200)
+    subTitle = models.TextField(null=True, blank=True)
+    content = models.TextField(null=True, blank=True)
+    newsType = models.ForeignKey(NewsType, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.title)
+
+
+# NewsImage: contain all images of a news
+class NewsImage(models.Model):
+    news = models.ForeignKey(News, related_name='images', on_delete=models.CASCADE)
+    image = models.CharField(max_length=300, null=True, blank=True)
+    description = models.CharField(max_length=300, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.id)
