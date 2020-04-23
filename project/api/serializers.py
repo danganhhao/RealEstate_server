@@ -204,7 +204,7 @@ class InterestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Interest
-        fields = ['user', 'estate']
+        fields = ['estate']
         # fields = '__all__'
 
 
