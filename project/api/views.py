@@ -290,7 +290,7 @@ class PostInfo(APIView):
             # ------------------- Authentication User ---------------------#
 
             error_header, status_code = Authentication().authentication(request, type_token='user')
-            if error_header['error_code']:
+            if error_header['error_code'] == 0:
                 return create_json_response(error_header, error_header, status_code=status_code)
 
             user_id = error_header['id']
@@ -336,7 +336,7 @@ class PostInfo(APIView):
             # ------------------- Authentication User ---------------------#
 
             error_header, status_code = Authentication().authentication(request, type_token='user')
-            if error_header['error_code']:
+            if error_header['error_code'] == 0:
                 return create_json_response(error_header, error_header, status_code=status_code)
 
             # ------------------- Get Parameters ---------------------#
@@ -472,7 +472,7 @@ class PostInfo(APIView):
             # ------------------- Authentication User ---------------------#
 
             error_header, status_code = Authentication().authentication(request, type_token='user')
-            if error_header['error_code']:
+            if error_header['error_code'] == 0:
                 return create_json_response(error_header, error_header, status_code=status_code)
 
             # ------------------- Get Parameters ---------------------#
@@ -915,7 +915,7 @@ class FavoriteInfo(APIView):
             # ------------------- Authentication User ---------------------#
 
             error_header, status_code = Authentication().authentication(request, type_token='user')
-            if error_header['error_code']:
+            if error_header['error_code'] == 0:
                 return create_json_response(error_header, error_header, status_code=status_code)
 
             user_id = error_header['id']
@@ -960,7 +960,7 @@ class FavoriteInfo(APIView):
             # ------------------- Authentication User ---------------------#
 
             error_header, status_code = Authentication().authentication(request, type_token='user')
-            if error_header['error_code']:
+            if error_header['error_code'] == 0:
                 return create_json_response(error_header, error_header, status_code=status_code)
 
             user_id = error_header['id']
@@ -970,6 +970,10 @@ class FavoriteInfo(APIView):
             try:
                 user_instance = User.objects.get(id=user_id)
                 estate_instance = Estate.objects.get(id=estate_id)
+                exist_fav = Interest.objects.filter(user=user_instance, estate=estate_instance)
+                if exist_fav.exists():
+                    error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + 'Estate is added favorite list'}
+                    return create_json_response(error_header, error_header, status_code=200)
                 favorite = Interest(user=user_instance, estate=estate_instance)
                 favorite.save()
 
@@ -1001,7 +1005,7 @@ class FavoriteInfo(APIView):
             # ------------------- Authentication User ---------------------#
 
             error_header, status_code = Authentication().authentication(request, type_token='user')
-            if error_header['error_code']:
+            if error_header['error_code'] == 0:
                 return create_json_response(error_header, error_header, status_code=status_code)
 
             user_id = error_header['id']

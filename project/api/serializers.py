@@ -204,7 +204,8 @@ class InterestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Interest
-        fields = ['estate']
+        # fields = ['estate']
+        fields = '__all__'
 
 
 class FilterMaxPriceSerializer(serializers.ModelSerializer):
