@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'name', 'username', 'email',
-                  'gender', 'birthday', 'address', 'avatar', 'phoneNumber', 'identifyNumber')
+                  'gender', 'birthday', 'address', 'avatar', 'phoneNumber', 'identifyNumber', 'isAgency')
         # fields = '__all__'
 
 
@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'name', 'email', 'phoneNumber')
+        fields = ('id', 'name', 'email', 'phoneNumber', 'isAgency')
 
 
 class UserTokenSerializer(serializers.ModelSerializer):
