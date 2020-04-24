@@ -928,7 +928,7 @@ class FavoriteInfo(APIView):
 
     """
     .../api/favorite/
-    get all favorite of current user
+    get all favorite estate of current user
     :require user token
     :return
     """
@@ -1045,6 +1045,44 @@ class FavoriteInfo(APIView):
 
             except Interest.DoesNotExist:
                 error_header = {'error_code': EC_FAIL, 'error_message': 'Interest is not exist'}
+                return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class FavoriteIDInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/favoriteid/
+    get all favorite estate ID of current user
+    :require user token
+    :return
+    """
+    def get(self, request):
+        try:
+            # ------------------- Authentication User ---------------------#
+
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            user_id = error_header['id']
+            try:
+                user_instance = User.objects.get(id=user_id)
+                fav_post = Interest.objects.filter(user=user_instance)
+                serializer = InterestIDSerializer(fav_post, many=True)
+                return Response(serializer.data)
+
+            except EstateType.DoesNotExist:
+                error_header = {'error_code': EC_FAIL, 'error_message': ' fail'}
                 return create_json_response(error_header, error_header, status_code=200)
 
         except KeyError:

@@ -7,10 +7,10 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
-
 from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings
 
+from api.models import Post
 from user.helper.authentication import Authentication
 from user.helper.utils import *
 from user.helper.json import *
@@ -47,6 +47,7 @@ class UserInfo(APIView):
         Create a new user
         Receive: username & password or token
     """
+
     def post(self, request):
 
         # --------------- Check Admin Token for permission -------------
@@ -124,6 +125,7 @@ class UserInfo(APIView):
         Modify a existed user
         Receive: token
     """
+
     def put(self, request):
         try:
             error_header, status_code = Authentication().authentication(request, type_token='user')
@@ -255,7 +257,7 @@ class Login(APIView):
                     return create_json_response(error_header, error_header, status_code=200)
 
         except KeyError:
-            error_header = {'error_code': EC_FAIL, 'error_message':  EM_EXIST + 'Missing require fields'}
+            error_header = {'error_code': EC_FAIL, 'error_message': EM_EXIST + 'Missing require fields'}
             return create_json_response(error_header, error_header, status_code=200)
 
         except Exception as e:
@@ -412,3 +414,162 @@ class ChangePassword(APIView):
             return create_json_response(error_header, error_header, status_code=200)
 
 
+class RegisterAgency(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    user/checkingaccount/
+    check user account. If approve, return info, else, return false
+    :require token header
+    :return
+    """
+
+    def post(self, request):
+        try:
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            user_id = error_header['id']
+            try:
+                if user_id:
+                    user_instance = User.objects.get(id=user_id)
+                    post_obj = Post.objects.filter(user=user_instance)
+                    if post_obj.count() >= MINIMUM_NUMBER_OF_POSTS_PER_AGENCY:
+                        serializer = UserSerializer(user_instance)
+                        return Response(serializer.data)
+                    else:
+                        error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + 'The number of posts must be '
+                                                                                          'greater than or equal to 20'}
+                        return create_json_response(error_header, error_header, status_code=200)
+
+                else:
+                    error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + 'User not exist'}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+            except User.DoesNotExist:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'Not found account'}
+                return create_json_response(error_header, error_header, status_code=200)
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class AgencyInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    def returnError(self, e):
+        error_header = {'error_code': EC_FAIL, 'error_message': 'fail - Missing require field: ' + e}
+        return create_json_response(error_header, error_header, status_code=200)
+
+    """
+        /user/agency/
+        Upgrade normal account to agency account
+        Receive: token
+    """
+
+    def post(self, request):
+        try:
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            json_data = request.data
+            name = json_data.get('name', None)
+            gender = json_data.get('gender', None)
+            email = json_data.get('email', None)
+            address = json_data.get('address', None)
+            phoneNumber = json_data.get('phoneNumber', None)
+            identifyNumber = json_data.get('identifyNumber', None)
+            birthday = json_data.get('birthday', None)
+            avatar = json_data.get('avatar', None)
+
+            if birthday is not None:
+                birthday = datetime.strptime(birthday, '%d/%m/%Y')
+            else:
+                birthday = datetime.strptime('01/01/1900', '%d/%m/%Y')
+
+            user_id = error_header['id']
+            try:
+                if user_id:
+                    user = User.objects.get(id=user_id)
+                    post_obj = Post.objects.filter(user=user)
+                    if post_obj.count() < MINIMUM_NUMBER_OF_POSTS_PER_AGENCY:
+                        error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + 'The number of posts must be '
+                                                                                          'greater than or equal to 20'}
+                        return create_json_response(error_header, error_header, status_code=200)
+
+                    if name is not None:
+                        user.name = name
+                    else:
+                        return self.returnError("name")
+                    if gender is not None:
+                        user.gender = gender
+                    else:
+                        return self.returnError("gender")
+                    if email is not None:
+                        user.email = email
+                    else:
+                        return self.returnError("email")
+                    if address is not None:
+                        user.address = address
+                    else:
+                        return self.returnError("address")
+
+                    if phoneNumber is not None:
+                        user.phoneNumber = phoneNumber
+                    else:
+                        return self.returnError("phoneNumber")
+
+                    if identifyNumber is not None:
+                        user.identifyNumber = identifyNumber
+                    else:
+                        return self.returnError("identifyNumber")
+
+                    if birthday is not None:
+                        user.birthday = birthday
+                    else:
+                        return self.returnError("birthday")
+
+                    if avatar is not None:
+                        # ---- Check image size --------
+                        if not is_image_size_valid(avatar.size, IMAGE_SIZE_MAX_BYTES):
+                            error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
+                            return create_json_response(error_header, error_header, status_code=200)
+
+                        # ---- Delete old avatar ------
+                        if user.avatar:
+                            temp = user.avatar.index('user/')
+                            temp_url = user.avatar[temp:]
+                            endIndex = temp_url.index('.')
+                            public_id = temp_url[:endIndex]
+                            cloudinary.uploader.destroy(public_id)
+
+                        # ---- Create new avatar ------
+                        path = uploadLocationUser(user.username, avatar.size)
+                        upload_data = cloudinary.uploader.upload(avatar, public_id=path)
+                        user.avatar = upload_data['secure_url']
+                    else:
+                        return self.returnError("avatar")
+
+                    user.isAgency = True
+                    user.save()
+
+                    error_header = {'error_code': EC_SUCCESS, 'error_message': 'success'}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+            except UserToken.DoesNotExist:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'User not exist'}
+                return create_json_response(error_header, error_header, status_code=200)
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)

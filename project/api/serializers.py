@@ -95,7 +95,8 @@ class EstateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Estate
-        fields = ['id', 'title', 'images', 'province', 'district', 'contact', 'project', 'area', 'price', 'created_day']
+        fields = ['id', 'title', 'images', 'province', 'district', 'contact',
+                  'project', 'area', 'price', 'created_day', 'lat', 'lng']
 
     # def get_a_image(self, estate):
     #     img = EstateImage.objects.filter(estate=estate.id).first()
@@ -206,6 +207,19 @@ class InterestSerializer(serializers.ModelSerializer):
         model = Interest
         fields = ['estate']
         # fields = '__all__'
+
+
+class InterestIDSerializer(serializers.ModelSerializer):
+    estate_id = serializers.SerializerMethodField('get_estate_id')
+
+    class Meta:
+        model = Interest
+        fields = ['estate_id']
+
+    def get_estate_id(self, interest):
+        if interest.estate:
+            return interest.estate.id
+        return ""
 
 
 class FilterMaxPriceSerializer(serializers.ModelSerializer):
