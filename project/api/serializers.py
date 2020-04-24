@@ -209,6 +209,19 @@ class InterestSerializer(serializers.ModelSerializer):
         # fields = '__all__'
 
 
+class InterestIDSerializer(serializers.ModelSerializer):
+    estate_id = serializers.SerializerMethodField('get_estate_id')
+
+    class Meta:
+        model = Interest
+        fields = ['estate_id']
+
+    def get_estate_id(self, interest):
+        if interest.estate:
+            return interest.estate.id
+        return ""
+
+
 class FilterMaxPriceSerializer(serializers.ModelSerializer):
     class Meta:
         model = FilterMaxPrice
