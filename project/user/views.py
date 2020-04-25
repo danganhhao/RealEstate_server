@@ -211,6 +211,7 @@ class Login(APIView):
         json_response['phoneNumber'] = user.phoneNumber
         json_response['email'] = user.email
         json_response['identifyNumber'] = user.identifyNumber
+        json_response['isAgency'] = user.isAgency
         return json_response
 
     """

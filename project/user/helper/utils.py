@@ -155,11 +155,11 @@ def normalize_filter_post_time_param(filter_id):
 
 def normalize_sort_param(sort_id):
     switcher = {
-        "1": None,
-        "2": "-created_day",
-        "3": "price",
-        "4": "-price",
-        "5": "area",
-        "6": "-area"
+        1: None,
+        2: "-created_day",
+        3: "price",
+        4: "-price",
+        5: "area",
+        6: "-area"
     }
     return switcher.get(sort_id, None)

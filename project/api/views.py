@@ -292,7 +292,7 @@ class PostInfo(APIView):
             error_header, status_code = Authentication().authentication(request, type_token='user')
             if error_header['error_code'] == 0:  # get posts with id
                 json_data = request.data
-                user_id = json_data.get('id')  # required
+                user_id = request.GET.get('id')  # required
                 page = request.GET.get('page', 1)
                 try:
                     user_instance = User.objects.get(id=user_id)
