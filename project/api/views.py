@@ -323,7 +323,7 @@ class PostInfo(APIView):
                     paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
                     try:
                         post_sub_obj = paginator.page(page)
-                        serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True)
+                        serializer = PostForCurrentUserSerializer(post_sub_obj, context={"request": request}, many=True)
                         result = {}
                         result['current_page'] = str(page)
                         result['total_page'] = str(paginator.num_pages)
