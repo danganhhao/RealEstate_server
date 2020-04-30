@@ -537,23 +537,24 @@ class AgencyInfo(APIView):
                         return self.returnError("birthday")
 
                     if avatar is not None:
-                        # ---- Check image size --------
-                        if not is_image_size_valid(avatar.size, IMAGE_SIZE_MAX_BYTES):
-                            error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
-                            return create_json_response(error_header, error_header, status_code=200)
+                        if user.avatar != avatar:
+                            # ---- Check image size --------
+                            if not is_image_size_valid(avatar.size, IMAGE_SIZE_MAX_BYTES):
+                                error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
+                                return create_json_response(error_header, error_header, status_code=200)
 
-                        # ---- Delete old avatar ------
-                        if user.avatar:
-                            temp = user.avatar.index('user/')
-                            temp_url = user.avatar[temp:]
-                            endIndex = temp_url.index('.')
-                            public_id = temp_url[:endIndex]
-                            cloudinary.uploader.destroy(public_id)
+                            # ---- Delete old avatar ------
+                            if user.avatar:
+                                temp = user.avatar.index('user/')
+                                temp_url = user.avatar[temp:]
+                                endIndex = temp_url.index('.')
+                                public_id = temp_url[:endIndex]
+                                cloudinary.uploader.destroy(public_id)
 
-                        # ---- Create new avatar ------
-                        path = uploadLocationUser(user.username, avatar.size)
-                        upload_data = cloudinary.uploader.upload(avatar, public_id=path)
-                        user.avatar = upload_data['secure_url']
+                            # ---- Create new avatar ------
+                            path = uploadLocationUser(user.username, avatar.size)
+                            upload_data = cloudinary.uploader.upload(avatar, public_id=path)
+                            user.avatar = upload_data['secure_url']
                     else:
                         return self.returnError("avatar")
 

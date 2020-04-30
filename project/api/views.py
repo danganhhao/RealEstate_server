@@ -527,43 +527,43 @@ class PostInfo(APIView):
                 # ------------------- Modify Estate ---------------------#
                 estate = Estate.objects.get(id=estate_id)
                 if estate:
-                    if title is not None:
+                    if title is not None and title != '':
                         estate.title = title
-                    if estateType is not None:
+                    if estateType is not None and estateType != '':
                         estateType_instance = EstateType.objects.get(id=estateType)
                         estate.estateType = estateType_instance
-                    if project is not None:
+                    if project is not None and project != '':
                         project_instance = Project.objects.get(id=project)
                         estate.project = project_instance
-                    if province is not None:
+                    if province is not None and province != '':
                         province_instance = Province.objects.get(id=province)
                         estate.province = province_instance
-                    if district is not None:
+                    if district is not None and district != '':
                         district_instance = District.objects.get(id=district)
                         estate.district = district_instance
-                    if ward is not None:
+                    if ward is not None and ward != '':
                         ward_instance = Ward.objects.get(id=ward)
                         estate.ward = ward_instance
-                    if street is not None:
+                    if street is not None and street != '':
                         street_instance = Street.objects.get(id=street)
                         estate.street = street_instance
-                    if address_detail is not None:
+                    if address_detail is not None and address_detail != '':
                         estate.addressDetail = address_detail
-                    if numberOfRoom is not None:
+                    if numberOfRoom is not None and numberOfRoom != '':
                         estate.numberOfRoom = numberOfRoom
-                    if description is not None:
+                    if description is not None and description != '':
                         estate.description = description
-                    if detail is not None:
+                    if detail is not None and detail != '':
                         estate.detail = detail
-                    if price is not None:
+                    if price is not None and price != '':
                         estate.price = price
-                    if area is not None:
+                    if area is not None and area != '':
                         estate.area = area
-                    if contact is not None:
+                    if contact is not None and contact != '':
                         estate.contact = contact
-                    if lat is not None:
+                    if lat is not None and lat != '':
                         estate.lat = lat
-                    if lng is not None:
+                    if lng is not None and lng != '':
                         estate.lng = lng
 
                     # ------------------- Modify Image ---------------------#
@@ -600,10 +600,10 @@ class PostInfo(APIView):
                     # ------------------- Modify Post ---------------------#
                     # user_instance = User.objects.get(id=user_id)
                     post_obj = Post.objects.get(estate=estate)
-                    if transaction is not None:
+                    if transaction is not None and transaction != '':
                         transaction_instance = TransactionType.objects.get(id=transaction)
                         post_obj.transaction = transaction_instance
-                    if expire_after is not None:
+                    if expire_after is not None and expire_after != '':
                         expireDays = int(expire_after)
                         if expireDays > 90:
                             expireDays = 90
