@@ -161,23 +161,24 @@ class UserInfo(APIView):
                         user.identifyNumber = identifyNumber
 
                     if avatar:
-                        # ---- Check image size --------
-                        if not is_image_size_valid(avatar.size, IMAGE_SIZE_MAX_BYTES):
-                            error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
-                            return create_json_response(error_header, error_header, status_code=200)
+                        if user.avatar != avatar:
+                            # ---- Check image size --------
+                            if not is_image_size_valid(avatar.size, IMAGE_SIZE_MAX_BYTES):
+                                error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
+                                return create_json_response(error_header, error_header, status_code=200)
 
-                        # ---- Delete old avatar ------
-                        if user.avatar:
-                            temp = user.avatar.index('user/')
-                            temp_url = user.avatar[temp:]
-                            endIndex = temp_url.index('.')
-                            public_id = temp_url[:endIndex]
-                            cloudinary.uploader.destroy(public_id)
+                            # ---- Delete old avatar ------
+                            if user.avatar:
+                                temp = user.avatar.index('user/')
+                                temp_url = user.avatar[temp:]
+                                endIndex = temp_url.index('.')
+                                public_id = temp_url[:endIndex]
+                                cloudinary.uploader.destroy(public_id)
 
-                        # ---- Create new avatar ------
-                        path = uploadLocationUser(user.username, avatar.size)
-                        upload_data = cloudinary.uploader.upload(avatar, public_id=path)
-                        user.avatar = upload_data['secure_url']
+                            # ---- Create new avatar ------
+                            path = uploadLocationUser(user.username, avatar.size)
+                            upload_data = cloudinary.uploader.upload(avatar, public_id=path)
+                            user.avatar = upload_data['secure_url']
 
                     user.save()
 
@@ -417,6 +418,16 @@ class ChangePassword(APIView):
 
 class RegisterAgency(APIView):
     parser_classes = (MultiPartParser,)
+
+    def checkNullField(self, field):
+        if field is None or field == "" or field == 'NULL':
+            return True
+        return False
+
+    def returnMissFieldError(self, field):
+        error_header = {'error_code': EC_MISS_REQUIRE_INFO, 'error_message': EM_FAIL + 'Miss field: ' + str(field)}
+        return create_json_response(error_header, error_header, status_code=200)
+
     """
     user/checkingaccount/
     check user account. If approve, return info, else, return false
@@ -435,13 +446,28 @@ class RegisterAgency(APIView):
                 if user_id:
                     user_instance = User.objects.get(id=user_id)
                     post_obj = Post.objects.filter(user=user_instance)
-                    if post_obj.count() >= MINIMUM_NUMBER_OF_POSTS_PER_AGENCY:
-                        serializer = UserSerializer(user_instance)
-                        return Response(serializer.data)
-                    else:
-                        error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + 'The number of posts must be '
-                                                                                          'greater than or equal to 20'}
+                    if post_obj.count() < MINIMUM_NUMBER_OF_POSTS_PER_AGENCY:
+                        error_header = {'error_code': EC_NOT_ENOUGH_POST, 'error_message': EM_FAIL + 'The number of '
+                                                                                                     'posts must be '
+                                                                                                     'greater than or '
+                                                                                                     'equal to 20'}
                         return create_json_response(error_header, error_header, status_code=200)
+
+                    if self.checkNullField(user_instance.gender):
+                        return self.returnMissFieldError('gender')
+                    if self.checkNullField(user_instance.birthday):
+                        return self.returnMissFieldError('birthday')
+                    if self.checkNullField(user_instance.address):
+                        return self.returnMissFieldError('address')
+                    if self.checkNullField(user_instance.avatar):
+                        return self.returnMissFieldError('avatar')
+                    if self.checkNullField(user_instance.phoneNumber):
+                        return self.returnMissFieldError('phoneNumber')
+                    if self.checkNullField(user_instance.identifyNumber):
+                        return self.returnMissFieldError('identifyNumber')
+
+                    error_header = {'error_code': EC_SUCCESS, 'error_message': 'Ready to upgrade to agency account'}
+                    return create_json_response(error_header, error_header, status_code=200)
 
                 else:
                     error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + 'User not exist'}
@@ -463,8 +489,13 @@ class RegisterAgency(APIView):
 class AgencyInfo(APIView):
     parser_classes = (MultiPartParser,)
 
-    def returnError(self, e):
-        error_header = {'error_code': EC_FAIL, 'error_message': 'fail - Missing require field: ' + e}
+    def checkNullField(self, field):
+        if field is None or field == "" or field == 'NULL':
+            return True
+        return False
+
+    def returnMissFieldError(self, field):
+        error_header = {'error_code': EC_MISS_REQUIRE_INFO, 'error_message': EM_FAIL + 'Miss field: ' + str(field)}
         return create_json_response(error_header, error_header, status_code=200)
 
     """
@@ -479,21 +510,6 @@ class AgencyInfo(APIView):
             if error_header['error_code'] == 0:
                 return create_json_response(error_header, error_header, status_code=status_code)
 
-            json_data = request.data
-            name = json_data.get('name', None)
-            gender = json_data.get('gender', None)
-            email = json_data.get('email', None)
-            address = json_data.get('address', None)
-            phoneNumber = json_data.get('phoneNumber', None)
-            identifyNumber = json_data.get('identifyNumber', None)
-            birthday = json_data.get('birthday', None)
-            avatar = json_data.get('avatar', None)
-
-            if birthday is not None:
-                birthday = datetime.strptime(birthday, '%d/%m/%Y')
-            else:
-                birthday = datetime.strptime('01/01/1900', '%d/%m/%Y')
-
             user_id = error_header['id']
             try:
                 if user_id:
@@ -504,59 +520,18 @@ class AgencyInfo(APIView):
                                                                                           'greater than or equal to 20'}
                         return create_json_response(error_header, error_header, status_code=200)
 
-                    if name is not None:
-                        user.name = name
-                    else:
-                        return self.returnError("name")
-                    if gender is not None:
-                        user.gender = gender
-                    else:
-                        return self.returnError("gender")
-                    if email is not None:
-                        user.email = email
-                    else:
-                        return self.returnError("email")
-                    if address is not None:
-                        user.address = address
-                    else:
-                        return self.returnError("address")
-
-                    if phoneNumber is not None:
-                        user.phoneNumber = phoneNumber
-                    else:
-                        return self.returnError("phoneNumber")
-
-                    if identifyNumber is not None:
-                        user.identifyNumber = identifyNumber
-                    else:
-                        return self.returnError("identifyNumber")
-
-                    if birthday is not None:
-                        user.birthday = birthday
-                    else:
-                        return self.returnError("birthday")
-
-                    if avatar is not None:
-                        if user.avatar != avatar:
-                            # ---- Check image size --------
-                            if not is_image_size_valid(avatar.size, IMAGE_SIZE_MAX_BYTES):
-                                error_header = {'error_code': EC_IMAGE_LARGE, 'error_message': EM_IMAGE_LARGE}
-                                return create_json_response(error_header, error_header, status_code=200)
-
-                            # ---- Delete old avatar ------
-                            if user.avatar:
-                                temp = user.avatar.index('user/')
-                                temp_url = user.avatar[temp:]
-                                endIndex = temp_url.index('.')
-                                public_id = temp_url[:endIndex]
-                                cloudinary.uploader.destroy(public_id)
-
-                            # ---- Create new avatar ------
-                            path = uploadLocationUser(user.username, avatar.size)
-                            upload_data = cloudinary.uploader.upload(avatar, public_id=path)
-                            user.avatar = upload_data['secure_url']
-                    else:
-                        return self.returnError("avatar")
+                    if self.checkNullField(user.gender):
+                        return self.returnMissFieldError('gender')
+                    if self.checkNullField(user.birthday):
+                        return self.returnMissFieldError('birthday')
+                    if self.checkNullField(user.address):
+                        return self.returnMissFieldError('address')
+                    if self.checkNullField(user.avatar):
+                        return self.returnMissFieldError('avatar')
+                    if self.checkNullField(user.phoneNumber):
+                        return self.returnMissFieldError('phoneNumber')
+                    if self.checkNullField(user.identifyNumber):
+                        return self.returnMissFieldError('identifyNumber')
 
                     user.isAgency = True
                     user.save()

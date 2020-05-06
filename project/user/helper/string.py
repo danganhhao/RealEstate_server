@@ -19,6 +19,9 @@ EC_EXIST = '2'
 EC_IMAGE_LARGE = '3'
 EC_IMAGE_RATIO = '3'
 
+EC_NOT_ENOUGH_POST = '100'
+EC_MISS_REQUIRE_INFO = '101'
+
 EM_SUCCESS = 'Success.'
 EM_FAIL = 'Something went wrong - '
 EM_EXIST = 'Something existed - '
