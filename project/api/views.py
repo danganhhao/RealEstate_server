@@ -23,6 +23,7 @@ from user.helper.string import *
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.utils import timezone
 
+import csv
 
 class ProvinceInfo(APIView):
     parser_classes = (MultiPartParser,)
@@ -1181,6 +1182,146 @@ class NewsInfo(APIView):
             except EstateType.DoesNotExist:
                 error_header = {'error_code': EC_FAIL, 'error_message': ' fail'}
                 return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class AddData(APIView):
+    parser_classes = (MultiPartParser,)
+
+    def modify_input_for_multiple_files(self, estate_id, image):
+        dict = {}
+        dict['estate'] = estate_id
+        dict['image'] = image
+        return dict
+
+    """
+    .../api/post/
+    create a post
+    :require user token
+    :param:
+    :return
+    """
+    def post(self, request):
+        try:
+            # ------------------- Authentication User ---------------------#
+
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            # ------------------- Get Parameters ---------------------#
+            user_id = error_header['id']
+
+            reader = csv.DictReader(open("/home/anhhao/Documents/Data/LuanVan/realestate/project/realestate_data_3.csv"))
+            for raw in reader:
+                title = raw.get('title')  # required
+                estateType = raw.get('estateType')  # required
+                expire_after = raw.get('expireAfter')  # required
+                project = raw.get('project', None)
+                province = raw.get('province')  # required
+                district = raw.get('district')  # required
+                ward = raw.get('ward', None)
+                street = raw.get('street', None)
+                address_detail = raw.get('addressDetail', "")
+                numberOfRoom = raw.get('numberOfRoom', "")
+                description = raw.get('description')  # required
+                detail = raw.get('detail')
+                price = raw.get('price', "")
+                area = raw.get('area', "")
+                contact = raw.get('contact', "")
+                images = raw.get('image', "")
+                transaction = raw.get('transaction')  # required
+                lat = raw.get('lat', "")
+                lng = raw.get('lng', "")
+
+                try:
+                    # ------------------- Create Estate ---------------------#
+
+                    # ------------------- Normalizer data -------------------#
+                    project_instance = None
+                    ward_instance = None
+                    street_instance = None
+                    estateType_instance = EstateType.objects.get(id=estateType)
+                    estateStatus_instance = EstateStatus.objects.get(id=10)
+                    province_instance = Province.objects.get(id=province)
+                    district_instance = District.objects.get(id=district)
+                    expireDays = int(expire_after)
+                    if project:
+                        project_instance = Project.objects.get(id=project)
+                    if ward:
+                        ward_instance = Ward.objects.get(id=ward)
+                    if street:
+                        street_instance = Street.objects.get(id=street)
+                    if numberOfRoom == "":
+                        numberOfRoom = 0
+                    if price == "":
+                        price = 0
+                    if area == "":
+                        area = 0
+                    if expireDays > 365:
+                        expireDays = 365
+
+                    # ------------------------------------------------#
+                    estate = Estate(
+                        title=title,
+                        estateType=estateType_instance,
+                        estateStatus=estateStatus_instance,
+                        project=project_instance,
+                        province=province_instance,
+                        district=district_instance,
+                        ward=ward_instance,
+                        addressDetail=address_detail,
+                        street=street_instance,
+                        numberOfRoom=numberOfRoom,
+                        description=description,
+                        detail=detail,
+                        price=price,
+                        area=area,
+                        contact=contact,
+                        created_day=timezone.now(),
+                        lat=lat,
+                        lng=lng
+                    )
+                    estate.save()
+
+                    # ------------------- Create Image ---------------------#
+
+                    estate_id = estate.id
+                    if images:
+                        path = uploadLocationEstate(estate_id, len(images))
+                        upload_data = cloudinary.uploader.upload(images, public_id=path)
+                        estate_image = EstateImage(
+                            estate=estate,
+                            image=upload_data['secure_url']
+                        )
+                        estate_image.save()
+
+                    # ------------------- Create Post ---------------------#
+                    user_instance = User.objects.get(id=user_id)
+                    transaction_instance = TransactionType.objects.get(id=transaction)
+                    new_post = Post(
+                        user=user_instance,
+                        estate=estate,
+                        transaction=transaction_instance,
+                        dateFrom=timezone.now(),
+                        dateTo=(timezone.now() + timezone.timedelta(days=expireDays))
+                    )
+                    new_post.save()
+
+                    error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+                except EstateType.DoesNotExist:
+                    error_header = {'error_code': EC_FAIL, 'error_message': ' fail'}
+                    return create_json_response(error_header, error_header, status_code=200)
 
         except KeyError:
             error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
