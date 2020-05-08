@@ -424,10 +424,6 @@ class RegisterAgency(APIView):
             return True
         return False
 
-    def returnMissFieldError(self, field):
-        error_header = {'error_code': EC_MISS_REQUIRE_INFO, 'error_message': EM_FAIL + 'Miss field: ' + str(field)}
-        return create_json_response(error_header, error_header, status_code=200)
-
     """
     user/checkingaccount/
     check user account. If approve, return info, else, return false
@@ -444,27 +440,39 @@ class RegisterAgency(APIView):
             user_id = error_header['id']
             try:
                 if user_id:
+                    isNotEnoughPost = False
+                    isNullField = False
                     user_instance = User.objects.get(id=user_id)
                     post_obj = Post.objects.filter(user=user_instance)
                     if post_obj.count() < MINIMUM_NUMBER_OF_POSTS_PER_AGENCY:
+                        isNotEnoughPost = True
+
+                    if self.checkNullField(user_instance.gender):
+                        isNullField = True
+                    if self.checkNullField(user_instance.birthday):
+                        isNullField = True
+                    if self.checkNullField(user_instance.address):
+                        isNullField = True
+                    if self.checkNullField(user_instance.avatar):
+                        isNullField = True
+                    if self.checkNullField(user_instance.phoneNumber):
+                        isNullField = True
+                    if self.checkNullField(user_instance.identifyNumber):
+                        isNullField = True
+
+                    if isNotEnoughPost and isNullField:
+                        error_header = {'error_code': EC__NOT_ENOUGH_POST_AND_MISS_REQUIRE_INFO,
+                                        'error_message': 'Both conditions are missing'}
+                        return create_json_response(error_header, error_header, status_code=200)
+                    if isNotEnoughPost:
                         error_header = {'error_code': EC_NOT_ENOUGH_POST, 'error_message': EM_FAIL + 'The number of '
                                                                                                      'posts must be '
                                                                                                      'greater than or '
                                                                                                      'equal to 20'}
                         return create_json_response(error_header, error_header, status_code=200)
-
-                    if self.checkNullField(user_instance.gender):
-                        return self.returnMissFieldError('gender')
-                    if self.checkNullField(user_instance.birthday):
-                        return self.returnMissFieldError('birthday')
-                    if self.checkNullField(user_instance.address):
-                        return self.returnMissFieldError('address')
-                    if self.checkNullField(user_instance.avatar):
-                        return self.returnMissFieldError('avatar')
-                    if self.checkNullField(user_instance.phoneNumber):
-                        return self.returnMissFieldError('phoneNumber')
-                    if self.checkNullField(user_instance.identifyNumber):
-                        return self.returnMissFieldError('identifyNumber')
+                    if isNullField:
+                        error_header = {'error_code': EC_MISS_REQUIRE_INFO, 'error_message': 'Miss require fields'}
+                        return create_json_response(error_header, error_header, status_code=200)
 
                     error_header = {'error_code': EC_SUCCESS, 'error_message': 'Ready to upgrade to agency account'}
                     return create_json_response(error_header, error_header, status_code=200)
