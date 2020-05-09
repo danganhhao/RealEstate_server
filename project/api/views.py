@@ -627,6 +627,45 @@ class PostInfo(APIView):
             return create_json_response(error_header, error_header, status_code=200)
 
 
+class MyPostInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/mypost/<int:id>
+    get a post of current user
+    :require user token
+    :param:
+    :return
+    """
+    def get(self, request):
+        try:
+            # ------------------- Authentication User ---------------------#
+
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code']:
+                estate_id = request.GET.get('id')  # required
+                user_id = error_header['id']
+                try:
+                    user_instance = User.objects.get(id=user_id)
+                    estate_instance = Estate.objects.get(id=estate_id)
+                    post_obj = Post.objects.get(user=user_instance, estate=estate_instance)
+                    serializer = PostForCurrentUserSerializer(post_obj, context={"request": request}, many=True)
+                    return Response(serializer.data)
+
+                except User.DoesNotExist:
+                    error_header = {'error_code': EC_FAIL, 'error_message': 'User not exist'}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
 class EstateInfo(APIView):
     parser_classes = (MultiPartParser,)
 

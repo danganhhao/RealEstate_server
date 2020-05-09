@@ -23,6 +23,7 @@ urlpatterns = [
     path('transaction/', TransactionTypeInfo.as_view(), name='transaction'),
     # path('post/$', PostInfo.as_view(), name='post'),
     url(r'^post/$', PostInfo.as_view(), name='post'),
+    path('mypost/<int:id>', MyPostInfo.as_view(), name='my_post'),
     url(r'^estate/$', EstateInfo.as_view(), name='estate'),
     # path('estate/$', EstateInfo.as_view(), name='estate'),
     path('estate/<int:id>', PostDetailInfo.as_view(), name='estate_detail'),
