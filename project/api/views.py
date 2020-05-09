@@ -536,6 +536,8 @@ class PostInfo(APIView):
                     if project is not None and project != '':
                         project_instance = Project.objects.get(id=project)
                         estate.project = project_instance
+                    else:
+                        estate.project = None
                     if province is not None and province != '':
                         province_instance = Province.objects.get(id=province)
                         estate.province = province_instance
@@ -545,27 +547,22 @@ class PostInfo(APIView):
                     if ward is not None and ward != '':
                         ward_instance = Ward.objects.get(id=ward)
                         estate.ward = ward_instance
+                    else:
+                        estate.ward = None
                     if street is not None and street != '':
                         street_instance = Street.objects.get(id=street)
                         estate.street = street_instance
-                    if address_detail is not None and address_detail != '':
-                        estate.addressDetail = address_detail
-                    if numberOfRoom is not None and numberOfRoom != '':
-                        estate.numberOfRoom = numberOfRoom
-                    if description is not None and description != '':
-                        estate.description = description
-                    if detail is not None and detail != '':
-                        estate.detail = detail
-                    if price is not None and price != '':
-                        estate.price = price
-                    if area is not None and area != '':
-                        estate.area = area
-                    if contact is not None and contact != '':
-                        estate.contact = contact
-                    if lat is not None and lat != '':
-                        estate.lat = lat
-                    if lng is not None and lng != '':
-                        estate.lng = lng
+                    else:
+                        estate.street = None
+                    estate.addressDetail = address_detail
+                    estate.numberOfRoom = numberOfRoom
+                    estate.description = description
+                    estate.detail = detail
+                    estate.price = price
+                    estate.area = area
+                    estate.contact = contact
+                    estate.lat = lat
+                    estate.lng = lng
 
                     # ------------------- Modify Image ---------------------#
                     # ------------------- Delete Old Image ---------------------#
