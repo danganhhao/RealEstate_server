@@ -655,6 +655,9 @@ class MyPostInfo(APIView):
                 except User.DoesNotExist:
                     error_header = {'error_code': EC_FAIL, 'error_message': 'User not exist'}
                     return create_json_response(error_header, error_header, status_code=200)
+            else:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'Error token'}
+                return create_json_response(error_header, error_header, status_code=200)
 
         except KeyError:
             error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
