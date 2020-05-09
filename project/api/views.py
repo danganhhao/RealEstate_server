@@ -297,7 +297,7 @@ class PostInfo(APIView):
                 page = request.GET.get('page', 1)
                 try:
                     user_instance = User.objects.get(id=user_id)
-                    post_obj = Post.objects.filter(user=user_instance)
+                    post_obj = Post.objects.filter(user=user_instance).order_by('-id')
                     paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
                     try:
                         post_sub_obj = paginator.page(page)
@@ -320,7 +320,7 @@ class PostInfo(APIView):
                 page = request.GET.get('page', 1)
                 try:
                     user_instance = User.objects.get(id=user_id)
-                    post_obj = Post.objects.filter(user=user_instance)
+                    post_obj = Post.objects.filter(user=user_instance).order_by('-id')
                     paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
                     try:
                         post_sub_obj = paginator.page(page)
@@ -945,7 +945,7 @@ class FavoriteInfo(APIView):
             page = request.GET.get('page', 1)
             try:
                 user_instance = User.objects.get(id=user_id)
-                fav_post = Interest.objects.filter(user=user_instance)
+                fav_post = Interest.objects.filter(user=user_instance).order_by('-id')
                 paginator = Paginator(fav_post, ITEMS_PER_PAGE, allow_empty_first_page=True)
                 try:
                     fav_post_sub_obj = paginator.page(page)
