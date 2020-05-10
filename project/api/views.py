@@ -22,6 +22,7 @@ from user.helper.string import *
 
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.utils import timezone
+from django.db.models import Count
 
 import csv
 
@@ -1229,6 +1230,44 @@ class NewsInfo(APIView):
         except Exception as e:
             print(e)
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class CityInfo(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    /cityinfo/
+    Receive:
+    """
+
+    def get(self, request):
+        try:
+            fieldname = 'province'
+            list_province_count = Estate.objects.values(fieldname).order_by(fieldname).annotate(the_count=Count(fieldname))
+            print(list_province_count)
+            num_hcm = ''
+            num_hn = ''
+            num_dn = ''
+            num_bd = ''
+            for province_count in list_province_count:
+                if province_count[fieldname] == HCM_ID:
+                    num_hcm = province_count['the_count']
+                if province_count[fieldname] == HN_ID:
+                    num_hn = province_count['the_count']
+                if province_count[fieldname] == DN_ID:
+                    num_dn = province_count['the_count']
+                if province_count[fieldname] == BD_ID:
+                    num_bd = province_count['the_count']
+            result = []
+            result.append({"id": HCM_ID, "name": HCM_NAME, "total_estate": num_hcm, "images": HCM_IMG})
+            result.append({"id": HN_ID, "name": HN_NAME, "total_estate": num_hn, "images": HN_IMG})
+            result.append({"id": DN_ID, "name": DN_NAME, "total_estate": num_dn, "images": DN_IMG})
+            result.append({"id": BD_ID, "name": BD_NAME, "total_estate": num_bd, "images": BD_IMG})
+            print(result)
+            return Response(result)
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
 
