@@ -23,14 +23,14 @@ HN_NAME = u'Hà Nội'
 DN_NAME = u'Đà Nẵng'
 BD_NAME = u'Bình Dương'
 
-HCM_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/v1589085310/static/HCM/HCM1_jwfmpz.jpg',
-           'https://res.cloudinary.com/myrealestate/image/upload/v1589085309/static/HCM/HCM2_g5oplx.jpg']
-HN_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/v1589085356/static/HN/HN_gehggq.jpg',
-          'https://res.cloudinary.com/myrealestate/image/upload/v1589085356/static/HN/HN1_zfajn5.jpg']
-DN_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/v1589085386/static/DN/DN1_te0mxf.jpg',
-          'https://res.cloudinary.com/myrealestate/image/upload/v1589085386/static/DN/DN2_cjaxbr.jpg']
-BD_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/v1589085371/static/BD/BD1_cabtru.jpg',
-          'https://res.cloudinary.com/myrealestate/image/upload/v1589085372/static/BD/BD2_cun1se.jpg']
+HCM_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085310/static/HCM/HCM1_jwfmpz.jpg',
+           'https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085309/static/HCM/HCM2_g5oplx.jpg']
+HN_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085356/static/HN/HN_gehggq.jpg',
+          'https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085356/static/HN/HN1_zfajn5.jpg']
+DN_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085386/static/DN/DN1_te0mxf.jpg',
+          'https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085386/static/DN/DN2_cjaxbr.jpg']
+BD_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085371/static/BD/BD1_cabtru.jpg',
+          'https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085372/static/BD/BD2_cun1se.jpg']
 
 EC_SUCCESS = '1'
 EC_FAIL = '0'
