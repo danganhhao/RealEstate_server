@@ -385,8 +385,8 @@ class PostInfo(APIView):
             contact = json_data.get('contact', "")
             images = dict(json_data.lists()).get('image', [])
             transaction = json_data.get('transaction')  # required
-            lat = json_data.get('lat', "")
-            lng = json_data.get('lng', "")
+            lat = json_data.get('lat', 0)
+            lng = json_data.get('lng', 0)
 
             try:
                 # ------------------- Create Estate ---------------------#
@@ -522,8 +522,8 @@ class PostInfo(APIView):
             new_images = dict(json_data.lists()).get('newImage', [])
             old_images = dict(json_data.lists()).get('oldImage', [])
             transaction = json_data.get('transaction', None)
-            lat = json_data.get('lat', None)
-            lng = json_data.get('lng', None)
+            lat = json_data.get('lat', 0)
+            lng = json_data.get('lng', 0)
 
             try:
                 # ------------------- Modify Estate ---------------------#
@@ -964,6 +964,37 @@ class SearchEngine(APIView):
             return create_json_response(error_header, error_header, status_code=200)
 
 
+class SearchOnMap(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+        .../api/searchonmap/
+        :return estate list on map
+    """
+
+    def post(self, request):
+        try:
+            json_data = request.data
+            lat_top_left = json_data.get('lat_top_left', 0)
+            lng_top_left = json_data.get('lng_top_left', 0)
+            lat_bottom_right = json_data.get('lat_bottom_right', 0)
+            lng_bottom_right = json_data.get('lng_bottom_right', 0)
+
+            estate = Estate.objects.all().order_by('-id')
+            estate = estate.filter(lat__range=(float(lat_bottom_right), float(lat_top_left)))
+            estate = estate.filter(lng__range=(lng_top_left, lng_bottom_right))[:50]
+            serializer = EstateSerializer(estate, context={"request": request}, many=True)
+            return Response(serializer.data)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
 class FavoriteInfo(APIView):
     parser_classes = (MultiPartParser,)
 
@@ -1317,8 +1348,8 @@ class AddData(APIView):
                 contact = raw.get('contact', "")
                 images = raw.get('image', "")
                 transaction = raw.get('transaction')  # required
-                lat = raw.get('lat', "")
-                lng = raw.get('lng', "")
+                lat = raw.get('lat', 0)
+                lng = raw.get('lng', 0)
 
                 try:
                     # ------------------- Create Estate ---------------------#

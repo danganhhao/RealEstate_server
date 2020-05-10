@@ -45,8 +45,8 @@ for raw in reader:
     contact = raw.get('contact', "")
     images = raw.get('image', "")
     transaction = raw.get('transaction')  # required
-    lat = raw.get('lat', "")
-    lng = raw.get('lng', "")
+    lat = raw.get('lat', 0)
+    lng = raw.get('lng', 0)
 
     try:
         # ------------------- Create Estate ---------------------#

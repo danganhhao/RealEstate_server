@@ -34,6 +34,7 @@ urlpatterns = [
     path('filternumberofroom/', FilterNumberOfRoomInfo.as_view(), name='filter_number_of_room'),
     path('filterposttime/', FilterPostTimeInfo.as_view(), name='filter_post_time'),
     path('search/', SearchEngine.as_view(), name='search'),
+    path('searchonmap/', SearchOnMap.as_view(), name='search_on_map'),
     url(r'^favorite/$', FavoriteInfo.as_view(), name='favorite'),
     path('favoriteid/', FavoriteIDInfo.as_view(), name='favorite_estate_id'),
     url(r'^news/$', NewsInfo.as_view(), name='news'),
