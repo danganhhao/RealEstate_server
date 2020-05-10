@@ -507,6 +507,21 @@ class AgencyInfo(APIView):
         return create_json_response(error_header, error_header, status_code=200)
 
     """
+        /user/agency
+        Receive:
+    """
+
+    def get(self, request):
+        try:
+            user = User.objects.filter(isAgency=True)
+            serializer = UserSerializer(user, context={"request": request}, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+    """
         /user/agency/
         Upgrade normal account to agency account
         Receive: token
