@@ -982,7 +982,7 @@ class SearchOnMap(APIView):
 
             estate = Estate.objects.all().order_by('-id')
             estate = estate.filter(lat__range=(float(lat_bottom_right), float(lat_top_left)))
-            estate = estate.filter(lng__range=(lng_top_left, lng_bottom_right))[:50]
+            estate = estate.filter(lng__range=(float(lng_top_left), float(lng_bottom_right)))[:50]
             serializer = EstateSerializer(estate, context={"request": request}, many=True)
             return Response(serializer.data)
 
