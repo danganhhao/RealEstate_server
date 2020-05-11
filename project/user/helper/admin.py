@@ -6,7 +6,7 @@ from django.contrib import admin
 
 
 class UserDisplay(admin.ModelAdmin):
-    list_display = ('username', 'email', 'name', 'gender')
+    list_display = ('username', 'email', 'name', 'gender', 'phoneNumber', 'isAgency')
     list_display_links = ('username', 'email')
     search_fields = ('username', 'email')
     list_per_page = 25
