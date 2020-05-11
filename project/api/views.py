@@ -806,7 +806,7 @@ class PostDetailInfo(APIView):
         try:
             # TODO: device_id
             # ------------------------------------------
-            device_id = request.GET.get('d', None)
+            device_id = request.GET.get('device_id', None)
 
             # ------------------------------------------
             estate = self.get_object(id)
