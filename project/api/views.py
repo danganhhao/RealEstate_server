@@ -785,6 +785,8 @@ class EstateDetailInfo(APIView):
 
 class PostDetailInfo(APIView):
     parser_classes = (MultiPartParser,)
+    # TODO: require deviceID or token
+
     """
     .../api/estate/<id>
     :return get a special estate (Json format)
@@ -923,7 +925,7 @@ class FilterPostTimeInfo(APIView):
 
 class SearchEngine(APIView):
     parser_classes = (MultiPartParser,)
-
+    # TODO: require deviceID or token
     """
         .../api/search/
         :return estate list with parameters
@@ -1030,6 +1032,7 @@ class SearchEngine(APIView):
 
 class SearchOnMap(APIView):
     parser_classes = (MultiPartParser,)
+    # TODO: require deviceID or token
 
     """
         .../api/searchonmap/
