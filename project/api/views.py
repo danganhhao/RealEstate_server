@@ -667,8 +667,9 @@ class PostInfo(APIView):
                     user_instance = User.objects.get(id=user_id)
                     post_obj = Post.objects.get(user=user_instance, estate=estate)
                     interest_obj = Interest.objects.get(user=user_instance, estate=estate)
+                    if interest_obj:
+                        interest_obj.delete()
                     post_obj.delete()
-                    interest_obj.delete()
                     estate.delete()
                     error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
                     return create_json_response(error_header, error_header, status_code=200)
