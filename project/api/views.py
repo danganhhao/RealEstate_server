@@ -305,7 +305,7 @@ class PostInfo(APIView):
                     paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
                     try:
                         post_sub_obj = paginator.page(page)
-                        serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True)
+                        serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True) #
                         result = {}
                         result['current_page'] = str(page)
                         result['total_page'] = str(paginator.num_pages)
@@ -328,7 +328,7 @@ class PostInfo(APIView):
                     paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
                     try:
                         post_sub_obj = paginator.page(page)
-                        serializer = PostForCurrentUserSerializer(post_sub_obj, context={"request": request}, many=True)
+                        serializer = PostForCurrentUserSerializer(post_sub_obj, context={"request": request}, many=True) #
                         result = {}
                         result['current_page'] = str(page)
                         result['total_page'] = str(paginator.num_pages)
@@ -692,7 +692,7 @@ class MyPostInfo(APIView):
 
     """
     .../api/mypost/<int:id>
-    get a post of current user
+    get a post of current user, call after modify a post
     :require user token
     :param:
     :return
@@ -710,7 +710,7 @@ class MyPostInfo(APIView):
                     user_instance = User.objects.get(id=user_id)
                     estate_instance = Estate.objects.get(id=estate_id)
                     post_obj = Post.objects.filter(user=user_instance, estate=estate_instance)
-                    serializer = PostForCurrentUserSerializer(post_obj, context={"request": request}, many=True)
+                    serializer = PostForCurrentUserSerializer(post_obj, context={"request": request}, many=True) #
                     return Response(serializer.data)
 
                 except User.DoesNotExist:
@@ -742,7 +742,7 @@ class EstateInfo(APIView):
     def get(self, request):
         try:
             page = request.GET.get('page', 1)
-            estate = Estate.objects.all().order_by('-id')
+            estate = Estate.objects.filter(isApproved=True).order_by('-id')
             paginator = Paginator(estate, ITEMS_PER_PAGE, allow_empty_first_page=True)
             try:
                 estate_obj = paginator.page(page)
@@ -943,7 +943,7 @@ class SearchEngine(APIView):
             m_filter_number_of_room = json_data.get('filter_number_of_room', None)
             m_filter_post_time = json_data.get('filter_post_time', None)
 
-            estate = Estate.objects.all().order_by('-id')
+            estate = Estate.objects.filter(isApproved=True).order_by('-id')
             # --------------- Filter estate type ------------------
             if m_estate_type is not None and m_estate_type != "":
                 estate = estate.filter(estateType=m_estate_type)
@@ -1044,7 +1044,7 @@ class SearchOnMap(APIView):
             lat_bottom_right = json_data.get('lat_bottom_right', 0)
             lng_bottom_right = json_data.get('lng_bottom_right', 0)
 
-            estate = Estate.objects.all().order_by('-id')
+            estate = Estate.objects.filter(isApproved=True).order_by('-id')
             estate = estate.filter(lat__range=(float(lat_bottom_right), float(lat_top_left)))
             estate = estate.filter(lng__range=(float(lng_top_left), float(lng_bottom_right)))[:50]
             serializer = EstateSerializer(estate, context={"request": request}, many=True)
