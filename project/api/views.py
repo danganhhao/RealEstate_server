@@ -666,7 +666,7 @@ class PostInfo(APIView):
                     # ------------------- Delete Post ---------------------#
                     user_instance = User.objects.get(id=user_id)
                     post_obj = Post.objects.get(user=user_instance, estate=estate)
-                    interest_obj = Interest.objects.get(user=user_instance, estate=estate)
+                    interest_obj = Interest.objects.filter(user=user_instance, estate=estate)
                     if interest_obj:
                         interest_obj.delete()
                     post_obj.delete()
@@ -801,6 +801,11 @@ class PostDetailInfo(APIView):
 
     def get(self, request, id):
         try:
+            # TODO: device_id
+            # ------------------------------------------
+            device_id = request.GET.get('d', None)
+
+            # ------------------------------------------
             estate = self.get_object(id)
             serializer = PostDetailSerializer(estate, context={"request": request})
             return Response(serializer.data)
@@ -945,6 +950,12 @@ class SearchEngine(APIView):
             m_filter_number_of_room = json_data.get('filter_number_of_room', None)
             m_filter_post_time = json_data.get('filter_post_time', None)
 
+            # TODO: device_id
+            # ------------------------------------------
+            device_id = json_data.get('device_id', None)
+            # ------------------------------------------
+
+
             estate = Estate.objects.filter(isApproved=1).order_by('-id')
             # --------------- Filter estate type ------------------
             if m_estate_type is not None and m_estate_type != "":
@@ -1047,6 +1058,11 @@ class SearchOnMap(APIView):
             lat_bottom_right = json_data.get('lat_bottom_right', 0)
             lng_bottom_right = json_data.get('lng_bottom_right', 0)
 
+            # TODO: device_id
+            # ------------------------------------------
+            device_id = json_data.get('device_id', None)
+            # ------------------------------------------
+
             estate = Estate.objects.filter(isApproved=1).order_by('-id')
             estate = estate.filter(lat__range=(float(lat_bottom_right), float(lat_top_left)))
             estate = estate.filter(lng__range=(float(lng_top_left), float(lng_bottom_right)))[:50]
@@ -1057,6 +1073,25 @@ class SearchOnMap(APIView):
             error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
             return create_json_response(error_header, error_header, status_code=200)
 
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class PostForYouInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+        .../api/postforyou/
+        return all estate
+        :return
+    """
+
+    def get(self, request):
+        try:
+            estate = Estate.objects.filter(isApproved=1).order_by('-id')[:25]
+            serializer = EstateSerializer(estate, context={"request": request}, many=True)
+            return Response(serializer.data)
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
