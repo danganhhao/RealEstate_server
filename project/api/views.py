@@ -302,6 +302,9 @@ class PostInfo(APIView):
                 try:
                     user_instance = User.objects.get(id=user_id)
                     post_obj = Post.objects.filter(user=user_instance).order_by('-id')
+                    for p_obj in post_obj:
+                        if p_obj.estate.isApproved != 1:
+                            post_obj = post_obj.exclude(id=p_obj.id)
                     paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
                     try:
                         post_sub_obj = paginator.page(page)
