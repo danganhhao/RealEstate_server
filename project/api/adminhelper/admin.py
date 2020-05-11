@@ -1,5 +1,4 @@
 from django.contrib import admin
-from api.models import Estate
 
 """
     Custom view of admin page
@@ -68,7 +67,16 @@ class EstateDisplay(admin.ModelAdmin):
     list_display_links = ('id', 'title')
     search_fields = ('id', 'title', 'province__name', 'district__name', 'isApproved')
     list_per_page = 25
-    list_filter = (EstateFilter, )
+    list_filter = (EstateFilter,)
+
+    actions = ['do_approve_estate', ]
+    # TODO: Override delete_estates, delete in post table, and delete image in cloud
+
+    def do_approve_estate(self, request, queryset):
+        count = queryset.update(isApproved=True)
+        self.message_user(request, '{} estate(s) have been approved successfully.'.format(count))
+
+    do_approve_estate.short_description = 'Mark selected estates as published'
 
 
 class EstateImageDisplay(admin.ModelAdmin):
