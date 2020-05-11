@@ -1,9 +1,32 @@
 from django.contrib import admin
+from api.models import Estate
 
 """
     Custom view of admin page
 """
 
+
+# ------------------------------------------
+
+class EstateFilter(admin.SimpleListFilter):
+    """
+    Reference: https://medium.com/elements/getting-the-most-out-of-django-admin-filters-2aecbb539c9a
+    """
+    title = 'IsApproved'
+    parameter_name = 'isApproved'
+
+    def lookups(self, request, model_admin):
+        list_of_estates = [('True', "Approved"), ('False', "Not Approved")]
+        return sorted(list_of_estates, key=lambda tp: tp[1])
+
+    def queryset(self, request, queryset):
+        value = super(EstateFilter, self).value()
+        if value is not None:
+            return queryset.filter(isApproved=value)
+        return queryset
+
+
+# --------------------------------------
 
 class ProvinceDisplay(admin.ModelAdmin):
     list_display = ('id', 'name', 'code')
@@ -41,10 +64,11 @@ class ProjectDisplay(admin.ModelAdmin):
 
 
 class EstateDisplay(admin.ModelAdmin):
-    list_display = ('id', 'title', 'estateType', 'project', 'province', 'district')
+    list_display = ('id', 'title', 'estateType', 'project', 'province', 'district', 'isApproved')
     list_display_links = ('id', 'title')
-    search_fields = ('id', 'title', 'province__name', 'district__name')
+    search_fields = ('id', 'title', 'province__name', 'district__name', 'isApproved')
     list_per_page = 25
+    list_filter = (EstateFilter, )
 
 
 class EstateImageDisplay(admin.ModelAdmin):
