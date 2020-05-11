@@ -26,6 +26,7 @@ from django.db.models import Count
 
 import csv
 
+
 class ProvinceInfo(APIView):
     parser_classes = (MultiPartParser,)
 
@@ -196,6 +197,7 @@ class ProjectSpecialInfo(APIView):
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
+
 # ---- End block-------------------------------------------
 
 
@@ -287,6 +289,7 @@ class PostInfo(APIView):
     :param:
     :return
     """
+
     def get(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -355,6 +358,7 @@ class PostInfo(APIView):
     :param:
     :return
     """
+
     def post(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -624,6 +628,61 @@ class PostInfo(APIView):
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
+    """
+        .../api/post/
+        delete a post
+        :require user token
+        :return
+    """
+
+    def delete(self, request):
+        try:
+            # ------------------- Authentication User ---------------------#
+
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            # ------------------- Get Parameters ---------------------#
+            user_id = error_header['id']
+
+            json_data = request.data
+            estate_id = json_data.get('id')  # require
+            try:
+                # ------------------- Delete Estate ---------------------#
+                estate = Estate.objects.get(id=estate_id)
+                if estate:
+                    # ------------------- Delete Image ---------------------#
+                    img_obj = EstateImage.objects.filter(estate=estate_id)
+                    for img in img_obj:
+                        url = img.image
+                        temp = url.index('/test/')
+                        temp_url = url[temp:]
+                        endIndex = temp_url.index('.')
+                        public_id = temp_url[1:endIndex]
+                        cloudinary.uploader.destroy(public_id)
+                        img.delete()
+
+                    # ------------------- Delete Post ---------------------#
+                    user_instance = User.objects.get(id=user_id)
+                    post_obj = Post.objects.get(user=user_instance, estate=estate)
+                    post_obj.delete()
+                    estate.delete()
+                    error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                    return create_json_response(error_header, error_header, status_code=200)
+            except Estate.DoesNotExist:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'Estate not exist'}
+                return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
 
 class MyPostInfo(APIView):
     parser_classes = (MultiPartParser,)
@@ -635,6 +694,7 @@ class MyPostInfo(APIView):
     :param:
     :return
     """
+
     def get(self, request, id):
         try:
             # ------------------- Authentication User ---------------------#
@@ -675,6 +735,7 @@ class EstateInfo(APIView):
         return all estate
         :return
     """
+
     def get(self, request):
         try:
             page = request.GET.get('page', 1)
@@ -1004,6 +1065,7 @@ class FavoriteInfo(APIView):
     :require user token
     :return
     """
+
     def get(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -1049,6 +1111,7 @@ class FavoriteInfo(APIView):
     :require user token
     :return
     """
+
     def post(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -1087,13 +1150,13 @@ class FavoriteInfo(APIView):
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
-
     """
     .../api/favorite/
     get remove a favorite estate
     :require user token
     :return
     """
+
     def delete(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -1138,6 +1201,7 @@ class FavoriteIDInfo(APIView):
     :require user token
     :return
     """
+
     def get(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -1201,6 +1265,7 @@ class NewsInfo(APIView):
     :param:
     :return
     """
+
     def post(self, request):
         try:
             # TODO: Require password for admin
@@ -1274,7 +1339,8 @@ class CityInfo(APIView):
     def get(self, request):
         try:
             fieldname = 'province'
-            list_province_count = Estate.objects.values(fieldname).order_by(fieldname).annotate(the_count=Count(fieldname))
+            list_province_count = Estate.objects.values(fieldname).order_by(fieldname).annotate(
+                the_count=Count(fieldname))
             print(list_province_count)
             num_hcm = ''
             num_hn = ''
@@ -1318,6 +1384,7 @@ class AddData(APIView):
     :param:
     :return
     """
+
     def post(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -1329,7 +1396,8 @@ class AddData(APIView):
             # ------------------- Get Parameters ---------------------#
             user_id = error_header['id']
 
-            reader = csv.DictReader(open("/home/anhhao/Documents/Data/LuanVan/realestate/project/realestate_data_3.csv"))
+            reader = csv.DictReader(
+                open("/home/anhhao/Documents/Data/LuanVan/realestate/project/realestate_data_3.csv"))
             for raw in reader:
                 title = raw.get('title')  # required
                 estateType = raw.get('estateType')  # required
