@@ -1,5 +1,8 @@
 from django.contrib import admin
 
+from api.models import Estate, EstateImage
+import cloudinary.uploader
+
 """
     Custom view of admin page
 """
@@ -69,8 +72,23 @@ class EstateDisplay(admin.ModelAdmin):
     list_per_page = 25
     list_filter = (EstateFilter,)
 
-    actions = ['do_approve_estate', ]
-    # TODO: Override delete_estates, delete in post table, and delete image in cloud
+    actions = ('do_approve_estate',)
+
+    # TODO: multiple delete
+
+    def delete_model(self, request, estate):
+        # do something with the user instance
+        # ------------------- Delete Image ---------------------#
+        img_obj = EstateImage.objects.filter(estate=estate.id)
+        for img in img_obj:
+            url = img.image
+            temp = url.index('/estate/')
+            temp_url = url[temp:]
+            endIndex = temp_url.index('.')
+            public_id = temp_url[1:endIndex]
+            cloudinary.uploader.destroy(public_id)
+
+        estate.delete()
 
     def do_approve_estate(self, request, queryset):
         count = queryset.update(isApproved=True)
