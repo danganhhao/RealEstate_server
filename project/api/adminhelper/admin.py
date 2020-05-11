@@ -18,7 +18,7 @@ class EstateFilter(admin.SimpleListFilter):
     parameter_name = 'isApproved'
 
     def lookups(self, request, model_admin):
-        list_of_estates = [('True', "Approved"), ('False', "Not Approved")]
+        list_of_estates = [('1', "Approved"), ('0', "Rejected"), ('2', "Processing")]
         return sorted(list_of_estates, key=lambda tp: tp[1])
 
     def queryset(self, request, queryset):
@@ -72,9 +72,7 @@ class EstateDisplay(admin.ModelAdmin):
     list_per_page = 25
     list_filter = (EstateFilter,)
 
-    actions = ('do_approve_estate',)
-
-    # TODO: multiple delete
+    actions = ('do_approve_estate', 'do_reject_estate')
 
     def delete_model(self, request, estate):
         # do something with the user instance
@@ -91,10 +89,16 @@ class EstateDisplay(admin.ModelAdmin):
         estate.delete()
 
     def do_approve_estate(self, request, queryset):
-        count = queryset.update(isApproved=True)
+        count = queryset.update(isApproved=1)
         self.message_user(request, '{} estate(s) have been approved successfully.'.format(count))
 
-    do_approve_estate.short_description = 'Mark selected estates as published'
+    do_approve_estate.short_description = 'Mark selected estates as approved'
+
+    def do_reject_estate(self, request, queryset):
+        count = queryset.update(isApproved=0)
+        self.message_user(request, '{} estate(s) have been rejected successfully.'.format(count))
+
+    do_reject_estate.short_description = 'Mark selected estates as rejected'
 
 
 class EstateImageDisplay(admin.ModelAdmin):
