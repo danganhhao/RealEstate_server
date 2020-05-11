@@ -656,7 +656,7 @@ class PostInfo(APIView):
                     img_obj = EstateImage.objects.filter(estate=estate_id)
                     for img in img_obj:
                         url = img.image
-                        temp = url.index('/test/')
+                        temp = url.index('/estate/')
                         temp_url = url[temp:]
                         endIndex = temp_url.index('.')
                         public_id = temp_url[1:endIndex]
