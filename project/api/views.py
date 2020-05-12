@@ -422,6 +422,10 @@ class PostInfo(APIView):
                     area = 0
                 if expireDays > 90:
                     expireDays = 90
+                if lat == "":
+                    lat = 0
+                if lng == "":
+                    lng = 0
 
                 # ------------------------------------------------#
                 estate = Estate(
