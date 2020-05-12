@@ -122,8 +122,9 @@ class Estate(models.Model):
     area = models.FloatField()
     contact = models.CharField(max_length=100)
     created_day = models.DateTimeField()
-    lat = models.CharField(max_length=50, null=True, blank=True)
-    lng = models.CharField(max_length=50, null=True, blank=True)
+    lat = models.FloatField(default=0)
+    lng = models.FloatField(default=0)
+    isApproved = models.IntegerField(default=2)
 
     def __str__(self):
         return str(self.id)

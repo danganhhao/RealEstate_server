@@ -19,6 +19,10 @@ from django.conf.urls import include
 from rest_framework.urlpatterns import format_suffix_patterns
 from django.conf.urls.static import static
 
+admin.site.site_header = 'Real Estate --- HAQ'
+admin.site.site_title = 'Real Estate --- HAQ'
+admin.site.index_title = 'Real Estate Administration'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('user.urls')),

@@ -22,6 +22,9 @@ from user.helper.string import *
 
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.utils import timezone
+from django.db.models import Count
+
+import csv
 
 
 class ProvinceInfo(APIView):
@@ -194,6 +197,7 @@ class ProjectSpecialInfo(APIView):
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
+
 # ---- End block-------------------------------------------
 
 
@@ -285,6 +289,7 @@ class PostInfo(APIView):
     :param:
     :return
     """
+
     def get(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -292,15 +297,18 @@ class PostInfo(APIView):
             error_header, status_code = Authentication().authentication(request, type_token='user')
             if error_header['error_code'] == 0:  # get posts with id
                 json_data = request.data
-                user_id = json_data.get('id')  # required
+                user_id = request.GET.get('id')  # required
                 page = request.GET.get('page', 1)
                 try:
                     user_instance = User.objects.get(id=user_id)
-                    post_obj = Post.objects.filter(user=user_instance)
+                    post_obj = Post.objects.filter(user=user_instance).order_by('-id')
+                    for p_obj in post_obj:
+                        if p_obj.estate.isApproved != 1:
+                            post_obj = post_obj.exclude(id=p_obj.id)
                     paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
                     try:
                         post_sub_obj = paginator.page(page)
-                        serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True)
+                        serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True) #
                         result = {}
                         result['current_page'] = str(page)
                         result['total_page'] = str(paginator.num_pages)
@@ -319,11 +327,11 @@ class PostInfo(APIView):
                 page = request.GET.get('page', 1)
                 try:
                     user_instance = User.objects.get(id=user_id)
-                    post_obj = Post.objects.filter(user=user_instance)
+                    post_obj = Post.objects.filter(user=user_instance).order_by('-id')
                     paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
                     try:
                         post_sub_obj = paginator.page(page)
-                        serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True)
+                        serializer = PostForCurrentUserSerializer(post_sub_obj, context={"request": request}, many=True) #
                         result = {}
                         result['current_page'] = str(page)
                         result['total_page'] = str(paginator.num_pages)
@@ -353,6 +361,7 @@ class PostInfo(APIView):
     :param:
     :return
     """
+
     def post(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -383,8 +392,8 @@ class PostInfo(APIView):
             contact = json_data.get('contact', "")
             images = dict(json_data.lists()).get('image', [])
             transaction = json_data.get('transaction')  # required
-            lat = json_data.get('lat', "")
-            lng = json_data.get('lng', "")
+            lat = json_data.get('lat', 0)
+            lng = json_data.get('lng', 0)
 
             try:
                 # ------------------- Create Estate ---------------------#
@@ -520,51 +529,48 @@ class PostInfo(APIView):
             new_images = dict(json_data.lists()).get('newImage', [])
             old_images = dict(json_data.lists()).get('oldImage', [])
             transaction = json_data.get('transaction', None)
-            lat = json_data.get('lat', None)
-            lng = json_data.get('lng', None)
+            lat = json_data.get('lat', 0)
+            lng = json_data.get('lng', 0)
 
             try:
                 # ------------------- Modify Estate ---------------------#
                 estate = Estate.objects.get(id=estate_id)
                 if estate:
-                    if title is not None:
+                    if title is not None and title != '':
                         estate.title = title
-                    if estateType is not None:
+                    if estateType is not None and estateType != '':
                         estateType_instance = EstateType.objects.get(id=estateType)
                         estate.estateType = estateType_instance
-                    if project is not None:
+                    if project is not None and project != '':
                         project_instance = Project.objects.get(id=project)
                         estate.project = project_instance
-                    if province is not None:
+                    else:
+                        estate.project = None
+                    if province is not None and province != '':
                         province_instance = Province.objects.get(id=province)
                         estate.province = province_instance
-                    if district is not None:
+                    if district is not None and district != '':
                         district_instance = District.objects.get(id=district)
                         estate.district = district_instance
-                    if ward is not None:
+                    if ward is not None and ward != '':
                         ward_instance = Ward.objects.get(id=ward)
                         estate.ward = ward_instance
-                    if street is not None:
+                    else:
+                        estate.ward = None
+                    if street is not None and street != '':
                         street_instance = Street.objects.get(id=street)
                         estate.street = street_instance
-                    if address_detail is not None:
-                        estate.addressDetail = address_detail
-                    if numberOfRoom is not None:
-                        estate.numberOfRoom = numberOfRoom
-                    if description is not None:
-                        estate.description = description
-                    if detail is not None:
-                        estate.detail = detail
-                    if price is not None:
-                        estate.price = price
-                    if area is not None:
-                        estate.area = area
-                    if contact is not None:
-                        estate.contact = contact
-                    if lat is not None:
-                        estate.lat = lat
-                    if lng is not None:
-                        estate.lng = lng
+                    else:
+                        estate.street = None
+                    estate.addressDetail = address_detail
+                    estate.numberOfRoom = numberOfRoom
+                    estate.description = description
+                    estate.detail = detail
+                    estate.price = price
+                    estate.area = area
+                    estate.contact = contact
+                    estate.lat = lat
+                    estate.lng = lng
 
                     # ------------------- Modify Image ---------------------#
                     # ------------------- Delete Old Image ---------------------#
@@ -600,10 +606,10 @@ class PostInfo(APIView):
                     # ------------------- Modify Post ---------------------#
                     # user_instance = User.objects.get(id=user_id)
                     post_obj = Post.objects.get(estate=estate)
-                    if transaction is not None:
+                    if transaction is not None and transaction != '':
                         transaction_instance = TransactionType.objects.get(id=transaction)
                         post_obj.transaction = transaction_instance
-                    if expire_after is not None:
+                    if expire_after is not None and expire_after != '':
                         expireDays = int(expire_after)
                         if expireDays > 90:
                             expireDays = 90
@@ -625,6 +631,107 @@ class PostInfo(APIView):
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
+    """
+        .../api/post/
+        delete a post
+        :require user token
+        :return
+    """
+
+    def delete(self, request):
+        try:
+            # ------------------- Authentication User ---------------------#
+
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            # ------------------- Get Parameters ---------------------#
+            user_id = error_header['id']
+
+            json_data = request.data
+            estate_id = json_data.get('id')  # require
+            try:
+                # ------------------- Delete Estate ---------------------#
+                estate = Estate.objects.get(id=estate_id)
+                if estate:
+                    # ------------------- Delete Image ---------------------#
+                    img_obj = EstateImage.objects.filter(estate=estate_id)
+                    for img in img_obj:
+                        url = img.image
+                        temp = url.index('/estate/')
+                        temp_url = url[temp:]
+                        endIndex = temp_url.index('.')
+                        public_id = temp_url[1:endIndex]
+                        cloudinary.uploader.destroy(public_id)
+                        img.delete()
+
+                    # ------------------- Delete Post ---------------------#
+                    user_instance = User.objects.get(id=user_id)
+                    post_obj = Post.objects.get(user=user_instance, estate=estate)
+                    interest_obj = Interest.objects.filter(user=user_instance, estate=estate)
+                    if interest_obj:
+                        interest_obj.delete()
+                    post_obj.delete()
+                    estate.delete()
+                    error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                    return create_json_response(error_header, error_header, status_code=200)
+            except Estate.DoesNotExist:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'Estate not exist'}
+                return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class MyPostInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+    .../api/mypost/<int:id>
+    get a post of current user, call after modify a post
+    :require user token
+    :param:
+    :return
+    """
+
+    def get(self, request, id):
+        try:
+            # ------------------- Authentication User ---------------------#
+
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code']:
+                estate_id = id  # require
+                user_id = error_header['id']
+                try:
+                    user_instance = User.objects.get(id=user_id)
+                    estate_instance = Estate.objects.get(id=estate_id)
+                    post_obj = Post.objects.filter(user=user_instance, estate=estate_instance)
+                    serializer = PostForCurrentUserSerializer(post_obj, context={"request": request}, many=True) #
+                    return Response(serializer.data)
+
+                except User.DoesNotExist:
+                    error_header = {'error_code': EC_FAIL, 'error_message': 'User not exist'}
+                    return create_json_response(error_header, error_header, status_code=200)
+            else:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'Error token'}
+                return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
 
 class EstateInfo(APIView):
     parser_classes = (MultiPartParser,)
@@ -634,10 +741,11 @@ class EstateInfo(APIView):
         return all estate
         :return
     """
+
     def get(self, request):
         try:
             page = request.GET.get('page', 1)
-            estate = Estate.objects.all().order_by('-id')
+            estate = Estate.objects.filter(isApproved=1).order_by('-id')
             paginator = Paginator(estate, ITEMS_PER_PAGE, allow_empty_first_page=True)
             try:
                 estate_obj = paginator.page(page)
@@ -680,6 +788,8 @@ class EstateDetailInfo(APIView):
 
 class PostDetailInfo(APIView):
     parser_classes = (MultiPartParser,)
+    # TODO: require deviceID or token
+
     """
     .../api/estate/<id>
     :return get a special estate (Json format)
@@ -694,6 +804,11 @@ class PostDetailInfo(APIView):
 
     def get(self, request, id):
         try:
+            # TODO: device_id
+            # ------------------------------------------
+            device_id = request.GET.get('device_id', None)
+
+            # ------------------------------------------
             estate = self.get_object(id)
             serializer = PostDetailSerializer(estate, context={"request": request})
             return Response(serializer.data)
@@ -818,7 +933,7 @@ class FilterPostTimeInfo(APIView):
 
 class SearchEngine(APIView):
     parser_classes = (MultiPartParser,)
-
+    # TODO: require deviceID or token
     """
         .../api/search/
         :return estate list with parameters
@@ -838,7 +953,13 @@ class SearchEngine(APIView):
             m_filter_number_of_room = json_data.get('filter_number_of_room', None)
             m_filter_post_time = json_data.get('filter_post_time', None)
 
-            estate = Estate.objects.all().order_by('-id')
+            # TODO: device_id
+            # ------------------------------------------
+            device_id = json_data.get('device_id', None)
+            # ------------------------------------------
+
+
+            estate = Estate.objects.filter(isApproved=1).order_by('-id')
             # --------------- Filter estate type ------------------
             if m_estate_type is not None and m_estate_type != "":
                 estate = estate.filter(estateType=m_estate_type)
@@ -923,6 +1044,62 @@ class SearchEngine(APIView):
             return create_json_response(error_header, error_header, status_code=200)
 
 
+class SearchOnMap(APIView):
+    parser_classes = (MultiPartParser,)
+    # TODO: require deviceID or token
+
+    """
+        .../api/searchonmap/
+        :return estate list on map
+    """
+
+    def post(self, request):
+        try:
+            json_data = request.data
+            lat_top_left = json_data.get('lat_top_left', 0)
+            lng_top_left = json_data.get('lng_top_left', 0)
+            lat_bottom_right = json_data.get('lat_bottom_right', 0)
+            lng_bottom_right = json_data.get('lng_bottom_right', 0)
+
+            # TODO: device_id
+            # ------------------------------------------
+            device_id = json_data.get('device_id', None)
+            # ------------------------------------------
+
+            estate = Estate.objects.filter(isApproved=1).order_by('-id')
+            estate = estate.filter(lat__range=(float(lat_bottom_right), float(lat_top_left)))
+            estate = estate.filter(lng__range=(float(lng_top_left), float(lng_bottom_right)))[:50]
+            serializer = EstateSerializer(estate, context={"request": request}, many=True)
+            return Response(serializer.data)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class PostForYouInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+        .../api/postforyou/
+        return all estate
+        :return
+    """
+
+    def get(self, request):
+        try:
+            estate = Estate.objects.filter(isApproved=1).order_by('-id')[:25]
+            serializer = EstateSerializer(estate, context={"request": request}, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
 class FavoriteInfo(APIView):
     parser_classes = (MultiPartParser,)
 
@@ -932,6 +1109,7 @@ class FavoriteInfo(APIView):
     :require user token
     :return
     """
+
     def get(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -944,7 +1122,7 @@ class FavoriteInfo(APIView):
             page = request.GET.get('page', 1)
             try:
                 user_instance = User.objects.get(id=user_id)
-                fav_post = Interest.objects.filter(user=user_instance)
+                fav_post = Interest.objects.filter(user=user_instance).order_by('-id')
                 paginator = Paginator(fav_post, ITEMS_PER_PAGE, allow_empty_first_page=True)
                 try:
                     fav_post_sub_obj = paginator.page(page)
@@ -977,6 +1155,7 @@ class FavoriteInfo(APIView):
     :require user token
     :return
     """
+
     def post(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -1015,13 +1194,13 @@ class FavoriteInfo(APIView):
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
-
     """
     .../api/favorite/
     get remove a favorite estate
     :require user token
     :return
     """
+
     def delete(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -1066,6 +1245,7 @@ class FavoriteIDInfo(APIView):
     :require user token
     :return
     """
+
     def get(self, request):
         try:
             # ------------------- Authentication User ---------------------#
@@ -1129,6 +1309,7 @@ class NewsInfo(APIView):
     :param:
     :return
     """
+
     def post(self, request):
         try:
             # TODO: Require password for admin
@@ -1181,6 +1362,187 @@ class NewsInfo(APIView):
             except EstateType.DoesNotExist:
                 error_header = {'error_code': EC_FAIL, 'error_message': ' fail'}
                 return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class CityInfo(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    /cityinfo/
+    Receive:
+    """
+
+    def get(self, request):
+        try:
+            fieldname = 'province'
+            list_province_count = Estate.objects.values(fieldname).order_by(fieldname).annotate(
+                the_count=Count(fieldname))
+            print(list_province_count)
+            num_hcm = ''
+            num_hn = ''
+            num_dn = ''
+            num_bd = ''
+            for province_count in list_province_count:
+                if province_count[fieldname] == HCM_ID:
+                    num_hcm = province_count['the_count']
+                if province_count[fieldname] == HN_ID:
+                    num_hn = province_count['the_count']
+                if province_count[fieldname] == DN_ID:
+                    num_dn = province_count['the_count']
+                if province_count[fieldname] == BD_ID:
+                    num_bd = province_count['the_count']
+            result = []
+            result.append({"id": HCM_ID, "name": HCM_NAME, "total_estate": num_hcm, "images": HCM_IMG})
+            result.append({"id": HN_ID, "name": HN_NAME, "total_estate": num_hn, "images": HN_IMG})
+            result.append({"id": DN_ID, "name": DN_NAME, "total_estate": num_dn, "images": DN_IMG})
+            result.append({"id": BD_ID, "name": BD_NAME, "total_estate": num_bd, "images": BD_IMG})
+            print(result)
+            return Response(result)
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class AddData(APIView):
+    parser_classes = (MultiPartParser,)
+
+    def modify_input_for_multiple_files(self, estate_id, image):
+        dict = {}
+        dict['estate'] = estate_id
+        dict['image'] = image
+        return dict
+
+    """
+    .../api/post/
+    create a post
+    :require user token
+    :param:
+    :return
+    """
+
+    def post(self, request):
+        try:
+            # ------------------- Authentication User ---------------------#
+
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            # ------------------- Get Parameters ---------------------#
+            user_id = error_header['id']
+
+            reader = csv.DictReader(
+                open("/home/anhhao/Documents/Data/LuanVan/realestate/project/realestate_data_3.csv"))
+            for raw in reader:
+                title = raw.get('title')  # required
+                estateType = raw.get('estateType')  # required
+                expire_after = raw.get('expireAfter')  # required
+                project = raw.get('project', None)
+                province = raw.get('province')  # required
+                district = raw.get('district')  # required
+                ward = raw.get('ward', None)
+                street = raw.get('street', None)
+                address_detail = raw.get('addressDetail', "")
+                numberOfRoom = raw.get('numberOfRoom', "")
+                description = raw.get('description')  # required
+                detail = raw.get('detail')
+                price = raw.get('price', "")
+                area = raw.get('area', "")
+                contact = raw.get('contact', "")
+                images = raw.get('image', "")
+                transaction = raw.get('transaction')  # required
+                lat = raw.get('lat', 0)
+                lng = raw.get('lng', 0)
+
+                try:
+                    # ------------------- Create Estate ---------------------#
+
+                    # ------------------- Normalizer data -------------------#
+                    project_instance = None
+                    ward_instance = None
+                    street_instance = None
+                    estateType_instance = EstateType.objects.get(id=estateType)
+                    estateStatus_instance = EstateStatus.objects.get(id=10)
+                    province_instance = Province.objects.get(id=province)
+                    district_instance = District.objects.get(id=district)
+                    expireDays = int(expire_after)
+                    if project:
+                        project_instance = Project.objects.get(id=project)
+                    if ward:
+                        ward_instance = Ward.objects.get(id=ward)
+                    if street:
+                        street_instance = Street.objects.get(id=street)
+                    if numberOfRoom == "":
+                        numberOfRoom = 0
+                    if price == "":
+                        price = 0
+                    if area == "":
+                        area = 0
+                    if expireDays > 365:
+                        expireDays = 365
+
+                    # ------------------------------------------------#
+                    estate = Estate(
+                        title=title,
+                        estateType=estateType_instance,
+                        estateStatus=estateStatus_instance,
+                        project=project_instance,
+                        province=province_instance,
+                        district=district_instance,
+                        ward=ward_instance,
+                        addressDetail=address_detail,
+                        street=street_instance,
+                        numberOfRoom=numberOfRoom,
+                        description=description,
+                        detail=detail,
+                        price=price,
+                        area=area,
+                        contact=contact,
+                        created_day=timezone.now(),
+                        lat=lat,
+                        lng=lng
+                    )
+                    estate.save()
+
+                    # ------------------- Create Image ---------------------#
+
+                    estate_id = estate.id
+                    if images:
+                        path = uploadLocationEstate(estate_id, len(images))
+                        upload_data = cloudinary.uploader.upload(images, public_id=path)
+                        estate_image = EstateImage(
+                            estate=estate,
+                            image=upload_data['secure_url']
+                        )
+                        estate_image.save()
+
+                    # ------------------- Create Post ---------------------#
+                    user_instance = User.objects.get(id=user_id)
+                    transaction_instance = TransactionType.objects.get(id=transaction)
+                    new_post = Post(
+                        user=user_instance,
+                        estate=estate,
+                        transaction=transaction_instance,
+                        dateFrom=timezone.now(),
+                        dateTo=(timezone.now() + timezone.timedelta(days=expireDays))
+                    )
+                    new_post.save()
+
+                    error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+                except EstateType.DoesNotExist:
+                    error_header = {'error_code': EC_FAIL, 'error_message': ' fail'}
+                    return create_json_response(error_header, error_header, status_code=200)
 
         except KeyError:
             error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}

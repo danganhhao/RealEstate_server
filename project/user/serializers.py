@@ -1,3 +1,4 @@
+from django.forms import DateField
 from rest_framework import serializers
 from .models import User, UserToken
 from django.conf import settings
@@ -8,6 +9,7 @@ We'll declare a serializer that we can use to serialize and deserialize an objec
 
 
 class UserSerializer(serializers.ModelSerializer):
+    birthday = serializers.DateField(format="%d/%m/%Y")
 
     class Meta:
         model = User

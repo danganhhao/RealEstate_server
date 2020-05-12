@@ -77,11 +77,11 @@ class DistrictSpecialSerializer(serializers.ModelSerializer):
         model = District
         fields = ['id', 'name', 'prefix']
 
+
 # ----------------------End get special location-----------------------
 
 
 class EstateImageSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = EstateImage
         fields = ['id', 'image']
@@ -182,6 +182,131 @@ class EstateDetailSerializer(serializers.ModelSerializer):
         return ""
 
 
+class EstateDetailForIsApprovedSerializer(serializers.ModelSerializer):  # only use for get posts of special user
+    images = EstateImageSerializer(many=True, read_only=True)  # related_name = images
+    estateType = serializers.SerializerMethodField('get_estateType')
+    # estateStatus = serializers.SerializerMethodField('get_estateStatus')
+    project = serializers.SerializerMethodField('get_project')
+    province = serializers.SerializerMethodField('get_province')
+    district = serializers.SerializerMethodField('get_district')
+    ward = serializers.SerializerMethodField('get_ward')
+    street = serializers.SerializerMethodField('get_street')
+
+    class Meta:
+        model = Estate
+        fields = ['id', 'images', 'estateType', 'project', 'province', 'district', 'ward', 'street', 'addressDetail',
+                  'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact', 'lat', 'lng',
+                  'isApproved']
+        # fields = '__all__'
+
+    def get_estateType(self, estate):
+        if estate.estateType:
+            return estate.estateType.name
+        return ""
+
+    def get_estateStatus(self, estate):
+        if estate.estateStatus:
+            return estate.estateStatus.status
+        return ""
+
+    def get_project(self, estate):
+        if estate.project:
+            result = {}
+            result['id'] = estate.project.id
+            result['name'] = estate.project.name
+            result['lat'] = estate.project.lat
+            result['lng'] = estate.project.lng
+            return result
+        return ""
+
+    def get_province(self, estate):
+        if estate.province:
+            return estate.province.name
+        return ""
+
+    def get_district(self, estate):
+        if estate.district:
+            return estate.district.name
+        return ""
+
+    def get_ward(self, estate):
+        if estate.ward:
+            return estate.ward.name
+        return ""
+
+    def get_street(self, estate):
+        if estate.street:
+            return estate.street.name
+        return ""
+
+
+class EstateDetailForCurrentUserSerializer(serializers.ModelSerializer):
+    images = EstateImageSerializer(many=True, read_only=True)  # related_name = images
+    estateType = serializers.SerializerMethodField('get_estateType')
+    project = serializers.SerializerMethodField('get_project')
+    province = serializers.SerializerMethodField('get_province')
+    district = serializers.SerializerMethodField('get_district')
+    ward = serializers.SerializerMethodField('get_ward')
+    street = serializers.SerializerMethodField('get_street')
+
+    class Meta:
+        model = Estate
+        fields = ['id', 'images', 'estateType', 'project', 'province', 'district', 'ward', 'street', 'addressDetail',
+                  'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact', 'lat', 'lng',
+                  'isApproved']
+
+    def get_estateType(self, estate):
+        if estate.estateType:
+            result = {}
+            result['id'] = estate.estateType.id
+            result['name'] = estate.estateType.name
+            return result
+        return ""
+
+    def get_project(self, estate):
+        if estate.project:
+            result = {}
+            result['id'] = estate.project.id
+            result['name'] = estate.project.name
+            result['lat'] = estate.project.lat
+            result['lng'] = estate.project.lng
+            return result
+        return ""
+
+    def get_province(self, estate):
+        if estate.province:
+            result = {}
+            result['id'] = estate.province.id
+            result['name'] = estate.province.name
+            return result
+        return ""
+
+    def get_district(self, estate):
+        if estate.district:
+            result = {}
+            result['id'] = estate.district.id
+            result['name'] = estate.district.name
+            return result
+        return ""
+
+    def get_ward(self, estate):
+        if estate.ward:
+            result = {}
+            result['id'] = estate.ward.id
+            result['name'] = estate.ward.name
+            result['prefix'] = estate.ward.prefix
+            return result
+        return ""
+
+    def get_street(self, estate):
+        if estate.street:
+            result = {}
+            result['id'] = estate.street.id
+            result['name'] = estate.street.name
+            return result
+        return ""
+
+
 class PostDetailSerializer(serializers.ModelSerializer):
     estate = EstateDetailSerializer()
     user = UserPostSerializer()
@@ -192,8 +317,16 @@ class PostDetailSerializer(serializers.ModelSerializer):
         # fields = '__all__'
 
 
-class PostSerializer(serializers.ModelSerializer):
-    estate = EstateDetailSerializer()
+class PostSerializer(serializers.ModelSerializer):  # For special user, without province_id, district_id...
+    estate = EstateDetailForIsApprovedSerializer()
+
+    class Meta:
+        model = Post
+        fields = ['estate', 'dateFrom', 'dateTo']
+
+
+class PostForCurrentUserSerializer(serializers.ModelSerializer):  # For current user to edit, need province_id, ...
+    estate = EstateDetailForCurrentUserSerializer()
 
     class Meta:
         model = Post

@@ -13,11 +13,37 @@ MAX_INT = 99999999
 
 ITEMS_PER_PAGE = 25
 
+COIN_FOR_SEARCH = 3
+COIN_FOR_TAP = 1
+
+HCM_ID = 1
+HN_ID = 2
+DN_ID = 3
+BD_ID = 4
+
+HCM_NAME = u'Hồ Chí Minh'
+HN_NAME = u'Hà Nội'
+DN_NAME = u'Đà Nẵng'
+BD_NAME = u'Bình Dương'
+
+HCM_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085310/static/HCM/HCM1_jwfmpz.jpg',
+           'https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085309/static/HCM/HCM2_g5oplx.jpg']
+HN_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085356/static/HN/HN_gehggq.jpg',
+          'https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085356/static/HN/HN1_zfajn5.jpg']
+DN_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085386/static/DN/DN1_te0mxf.jpg',
+          'https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085386/static/DN/DN2_cjaxbr.jpg']
+BD_IMG = ['https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085371/static/BD/BD1_cabtru.jpg',
+          'https://res.cloudinary.com/myrealestate/image/upload/w_500/v1589085372/static/BD/BD2_cun1se.jpg']
+
 EC_SUCCESS = '1'
 EC_FAIL = '0'
 EC_EXIST = '2'
 EC_IMAGE_LARGE = '3'
 EC_IMAGE_RATIO = '3'
+
+EC_NOT_ENOUGH_POST = '33'
+EC_MISS_REQUIRE_INFO = '34'
+EC__NOT_ENOUGH_POST_AND_MISS_REQUIRE_INFO = '35'
 
 EM_SUCCESS = 'Success.'
 EM_FAIL = 'Something went wrong - '
