@@ -242,3 +242,17 @@ class NewsImage(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+# Tracking table:
+class Tracking(models.Model):
+    deviceId = models.CharField(max_length=30)
+    province = models.ForeignKey(Province, on_delete=models.CASCADE, null=True, blank=True)
+    district = models.ForeignKey(District, on_delete=models.CASCADE, null=True, blank=True)
+    estateType = models.ForeignKey(EstateType, on_delete=models.CASCADE, null=True, blank=True)
+    price = models.BigIntegerField(null=True, blank=True)
+    area = models.FloatField(null=True, blank=True)
+    timestamp = models.DateTimeField()
+
+    def __str__(self):
+        return str(self.deviceId)

@@ -134,3 +134,10 @@ class NewsImageDisplay(admin.ModelAdmin):
     list_display_links = ('id', 'news')
     search_fields = ('id', 'news__title')
     list_per_page = 25
+
+
+class TrackingDisplay(admin.ModelAdmin):
+    list_display = ('id', 'deviceId', 'province', 'district', 'estateType', 'price', 'area', 'timestamp')
+    list_display_links = ('id', 'deviceId')
+    search_fields = ('id', 'deviceId')
+    list_per_page = 25

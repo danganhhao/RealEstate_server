@@ -19,6 +19,7 @@ from user.helper.json import create_json_response
 from user.helper.utils import *
 from user.models import *
 from user.helper.string import *
+from api.adminhelper.tracking import *
 
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.utils import timezone
@@ -788,7 +789,6 @@ class EstateDetailInfo(APIView):
 
 class PostDetailInfo(APIView):
     parser_classes = (MultiPartParser,)
-    # TODO: require deviceID or token
 
     """
     .../api/estate/<id>
@@ -802,15 +802,28 @@ class PostDetailInfo(APIView):
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+    def saveDataToOffer(self, request, post):
+        # ------------------------------------------
+        device_id = request.GET.get('device_id', None)
+        error_header, status_code = Authentication().authentication(request, type_token='user')
+        estate = post.estate
+        if error_header['error_code']:
+            saveToDatabase(error_header['id'], estate.province.id, estate.district.id,
+                           estate.estateType.id, estate.price, estate.area)
+        else:
+            if device_id is not None:
+                saveToDatabase(device_id, estate.province.id, estate.district.id,
+                               estate.estateType.id, estate.price, estate.area)
+
+        # ------------------------------------------
+
     def get(self, request, id):
         try:
-            # TODO: device_id
-            # ------------------------------------------
-            device_id = request.GET.get('device_id', None)
-
-            # ------------------------------------------
             estate = self.get_object(id)
             serializer = PostDetailSerializer(estate, context={"request": request})
+            # -------- Tracking ---------------
+            self.saveDataToOffer(request, estate)
+            # ---------------------------------
             return Response(serializer.data)
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
@@ -933,7 +946,21 @@ class FilterPostTimeInfo(APIView):
 
 class SearchEngine(APIView):
     parser_classes = (MultiPartParser,)
-    # TODO: require deviceID or token
+
+    def saveDataToOffer(self, request):
+        # ------------------------------------------
+        json_data = request.data
+        device_id = json_data.get('device_id', None)
+        province = json_data.get('province', None)
+        district = json_data.get('district', None)
+        estate_type = json_data.get('estate_type', None)
+        error_header, status_code = Authentication().authentication(request, type_token='user')
+        if error_header['error_code']:
+            saveToDatabase(error_header['id'], province, district, estate_type, None, None)
+        else:
+            if device_id is not None:
+                saveToDatabase(device_id, province, district, estate_type, None, None)
+
     """
         .../api/search/
         :return estate list with parameters
@@ -953,11 +980,9 @@ class SearchEngine(APIView):
             m_filter_number_of_room = json_data.get('filter_number_of_room', None)
             m_filter_post_time = json_data.get('filter_post_time', None)
 
-            # TODO: device_id
+            # ------------ Tracking --------------------
+            self.saveDataToOffer(request)
             # ------------------------------------------
-            device_id = json_data.get('device_id', None)
-            # ------------------------------------------
-
 
             estate = Estate.objects.filter(isApproved=1).order_by('-id')
             # --------------- Filter estate type ------------------
@@ -1092,6 +1117,13 @@ class PostForYouInfo(APIView):
 
     def get(self, request):
         try:
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code']:
+                return getOfferPostsForEachUser(error_header['id'])
+            device_id = request.GET.get('device_id', None)
+            if device_id is not None:
+                return getOfferPostsForEachUser(device_id)
+
             estate = Estate.objects.filter(isApproved=1).order_by('-id')[:25]
             serializer = EstateSerializer(estate, context={"request": request}, many=True)
             return Response(serializer.data)
