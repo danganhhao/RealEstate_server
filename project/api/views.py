@@ -537,7 +537,11 @@ class PostInfo(APIView):
             transaction = json_data.get('transaction', None)
             lat = json_data.get('lat', 0)
             lng = json_data.get('lng', 0)
-
+            if lat == "":
+                lat = 0
+            if lng == "":
+                lng = 0
+                
             try:
                 # ------------------- Modify Estate ---------------------#
                 estate = Estate.objects.get(id=estate_id)
