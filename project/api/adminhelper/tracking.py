@@ -36,8 +36,8 @@ def saveToDatabase(m_id, province_id, district_id, estate_type, price, area):
             and isExistObject(district_id) == False \
             and isExistObject(estate_type) == False \
             and isExistObject(price) == False \
-            and isExistObject(price) == False:
-        pass
+            and isExistObject(area) == False:
+        return
     province_instance = None
     district_instance = None
     estateType_instance = None

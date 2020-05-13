@@ -542,31 +542,31 @@ class PostInfo(APIView):
                 # ------------------- Modify Estate ---------------------#
                 estate = Estate.objects.get(id=estate_id)
                 if estate:
-                    if title is not None and title != '':
+                    if isExistObject(title):
                         estate.title = title
-                    if estateType is not None and estateType != '':
+                    if isExistObject(estateType):
                         estateType_instance = EstateType.objects.get(id=estateType)
                         estate.estateType = estateType_instance
-                    if project is not None and project != '':
+                    if isExistObject(project):
                         project_instance = Project.objects.get(id=project)
                         estate.project = project_instance
                     else:
                         estate.project = None
-                    if province is not None and province != '':
+                    if isExistObject(province):
                         province_instance = Province.objects.get(id=province)
                         estate.province = province_instance
-                    if district is not None and district != '':
+                    if isExistObject(district):
                         district_instance = District.objects.get(id=district)
                         estate.district = district_instance
-                    if ward is not None and ward != '':
+                    if isExistObject(ward):
                         ward_instance = Ward.objects.get(id=ward)
                         estate.ward = ward_instance
                     else:
                         estate.ward = None
-                    if transaction is not None and transaction != '':
+                    if isExistObject(transaction):
                         transaction_instance = TransactionType.objects.get(id=transaction)
                         estate.transaction = transaction_instance
-                    if street is not None and street != '':
+                    if isExistObject(street):
                         street_instance = Street.objects.get(id=street)
                         estate.street = street_instance
                     else:
@@ -615,7 +615,7 @@ class PostInfo(APIView):
                     # ------------------- Modify Post ---------------------#
                     # user_instance = User.objects.get(id=user_id)
                     post_obj = Post.objects.get(estate=estate)
-                    if expire_after is not None and expire_after != '':
+                    if isExistObject(expire_after):
                         expireDays = int(expire_after)
                         if expireDays > 90:
                             expireDays = 90
@@ -816,7 +816,7 @@ class PostDetailInfo(APIView):
             saveToDatabase(error_header['id'], estate.province.id, estate.district.id,
                            estate.estateType.id, estate.price, estate.area)
         else:
-            if device_id is not None:
+            if isExistObject(device_id):
                 saveToDatabase(device_id, estate.province.id, estate.district.id,
                                estate.estateType.id, estate.price, estate.area)
 
@@ -963,7 +963,7 @@ class SearchEngine(APIView):
         if error_header['error_code']:
             saveToDatabase(error_header['id'], province, district, estate_type, None, None)
         else:
-            if device_id is not None:
+            if isExistObject(device_id):
                 saveToDatabase(device_id, province, district, estate_type, None, None)
 
     """
@@ -992,68 +992,66 @@ class SearchEngine(APIView):
 
             estate = Estate.objects.filter(isApproved=1).order_by('-id')
             # --------------- Filter estate type ------------------
-            if m_estate_type is not None and m_estate_type != "":
+            if isExistObject(m_estate_type):
                 estate = estate.filter(estateType=m_estate_type)
 
             # --------------- Filter transaction  ------------------
-            if m_transaction is not None and m_transaction != "":
+            if isExistObject(m_transaction):
                 estate = estate.filter(transaction=m_transaction)
 
             # --------------- Search with keyword -----------------
-            if m_keyword is not None and m_keyword != "":
+            if isExistObject(m_keyword):
                 estate = estate.filter(title__icontains=m_keyword)
 
             # --------------- Filter: Location --------------------
             for field in fields:
                 value = json_data.get(field, None)
-                if value is not None and value != "":
+                if isExistObject(value):
                     estate = estate.filter(**{field: value})
 
             # --------------- Filter with max price ---------------
-            if m_filter_max_price is not None and m_filter_max_price != "":
+            if isExistObject(m_filter_max_price):
                 v = FilterMaxPrice.objects.get(id=m_filter_max_price).value
                 param = normalize_filter_max_price_param(v)
-                if param is not None:
+                if isExistObject(param):
                     estate = estate.filter(price__lte=param)
 
             # --------------- Filter with min price ---------------
-            if m_filter_min_price is not None and m_filter_min_price != "":
+            if isExistObject(m_filter_min_price):
                 v = FilterMinPrice.objects.get(id=m_filter_min_price).value
                 param = normalize_filter_min_price_param(v)
-                if param is not None:
+                if isExistObject(param):
                     estate = estate.filter(price__gte=param)
 
             # --------------- Filter with area ---------------
-            if m_filter_area is not None and m_filter_area != "":
-                print(m_filter_area)
-
+            if isExistObject(m_filter_area):
                 v = FilterArea.objects.get(id=m_filter_area).value
                 param = normalize_filter_area_param(v)
-                if param is not None:
+                if isExistObject(param):
                     estate = estate.filter(area__range=(param[0], param[1]))
 
             # --------------- Filter with number of room -----
-            if m_filter_number_of_room is not None and m_filter_number_of_room != "":
+            if isExistObject(m_filter_number_of_room):
                 v = FilterNumberOfRoom.objects.get(id=m_filter_number_of_room).value
                 param = normalize_filter_number_of_room_param(v)
-                if param is not None:
+                if isExistObject(param):
                     if param != -1:
                         estate = estate.filter(numberOfRoom=param)
                     else:
                         estate = estate.filter(numberOfRoom__range=(6, MAX_INT))
 
             # --------------- Filter with post time----------------
-            if m_filter_post_time is not None and m_filter_post_time != "":
+            if isExistObject(m_filter_post_time):
                 v = FilterPostTime.objects.get(id=m_filter_post_time).value
                 param = normalize_filter_post_time_param(v)
-                if param is not None:
+                if isExistObject(param):
                     estate = estate.filter(created_day__range=(param[0], param[1]))
 
             # --------------- Sort --------------------------------
-            if m_sort is not None and m_sort != "":
+            if isExistObject(m_sort):
                 v = SortType.objects.get(id=m_sort).value
                 param = normalize_sort_param(v)
-                if param is not None:
+                if isExistObject(param):
                     estate = estate.order_by(param)
 
             # --------------- Pagination --------------------------
@@ -1131,7 +1129,7 @@ class PostForYouInfo(APIView):
             if error_header['error_code']:
                 return getOfferPostsForEachUser(error_header['id'])
             device_id = request.GET.get('device_id', None)
-            if device_id is not None:
+            if isExistObject(device_id):
                 return getOfferPostsForEachUser(device_id)
 
             estate = Estate.objects.filter(isApproved=1).order_by('-id')[:25]
