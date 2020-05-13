@@ -75,6 +75,10 @@ for raw in reader:
             area = 0
         if expireDays > 365:
             expireDays = 365
+        if lat == "":
+            lat = 0
+        if lng == "":
+            lng = 0
 
         # ------------------------------------------------#
         estate = Estate(
