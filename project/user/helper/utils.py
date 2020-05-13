@@ -163,3 +163,10 @@ def normalize_sort_param(sort_id):
         6: "-area"
     }
     return switcher.get(sort_id, None)
+
+
+def isExistObject(obj):
+    if obj is not None and obj != "":
+        return True
+    else:
+        return False

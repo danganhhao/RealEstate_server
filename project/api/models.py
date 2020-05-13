@@ -37,7 +37,7 @@ class EstateStatus(models.Model):
 # Type transaction table: buy or sell
 class TransactionType(models.Model):
     TYPE = (
-        ('Mua', 'Mua'),
+        ('Thuê', 'Thuê'),
         ('Bán', 'Bán')
     )
     name = models.CharField(max_length=30, choices=TYPE)
@@ -114,6 +114,7 @@ class Estate(models.Model):
     district = models.ForeignKey(District, on_delete=models.CASCADE, null=True, blank=True)
     ward = models.ForeignKey(Ward, on_delete=models.CASCADE, null=True, blank=True)
     street = models.ForeignKey(Street, on_delete=models.CASCADE, null=True, blank=True)
+    transaction = models.ForeignKey(TransactionType, on_delete=models.CASCADE, null=True)
     addressDetail = models.CharField(max_length=100, null=True, blank=True)
     numberOfRoom = models.IntegerField()
     description = models.TextField(max_length=5000, null=True, blank=True)
@@ -144,7 +145,6 @@ class EstateImage(models.Model):
 class Post(models.Model):
     user = models.ForeignKey('user.User', on_delete=models.CASCADE)
     estate = models.ForeignKey(Estate, on_delete=models.CASCADE)
-    transaction = models.ForeignKey(TransactionType, on_delete=models.CASCADE, null=True)
     dateFrom = models.DateTimeField()
     dateTo = models.DateTimeField()
 

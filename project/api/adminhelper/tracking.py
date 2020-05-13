@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from django.db.models import Count
 
 from user.helper.string import MAX_INT
+from user.helper.utils import isExistObject
 
 
 class Switch(dict):
@@ -31,16 +32,20 @@ def saveToDatabase(m_id, province_id, district_id, estate_type, price, area):
         :param area (to save into tracking table)
         :return
     """
-    if province_id is None and district_id is None and estate_type is None and price is None and area is None:
+    if isExistObject(province_id) == False \
+            and isExistObject(district_id) == False \
+            and isExistObject(estate_type) == False \
+            and isExistObject(price) == False \
+            and isExistObject(price) == False:
         pass
     province_instance = None
     district_instance = None
     estateType_instance = None
-    if province_id is not None and province_id != "":
+    if isExistObject(province_id):
         province_instance = Province.objects.get(id=province_id)
-    if district_id is not None and district_id != "":
+    if isExistObject(district_id):
         district_instance = District.objects.get(id=district_id)
-    if estate_type is not None and estate_type != "":
+    if isExistObject(estate_type):
         estateType_instance = EstateType.objects.get(id=estate_type)
     Tracking(
         deviceId=m_id,

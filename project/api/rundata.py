@@ -59,6 +59,7 @@ for raw in reader:
         estateStatus_instance = EstateStatus.objects.get(id=10)
         province_instance = Province.objects.get(id=province)
         district_instance = District.objects.get(id=district)
+        transaction_instance = TransactionType.objects.get(id=transaction)
         expireDays = int(expire_after)
         if project:
             project_instance = Project.objects.get(id=project)
@@ -86,6 +87,7 @@ for raw in reader:
             ward=ward_instance,
             addressDetail=address_detail,
             street=street_instance,
+            transaction=transaction_instance,
             numberOfRoom=numberOfRoom,
             description=description,
             detail=detail,
@@ -112,11 +114,10 @@ for raw in reader:
 
         # ------------------- Create Post ---------------------#
         user_instance = User.objects.get(id=user_id)
-        transaction_instance = TransactionType.objects.get(id=transaction)
+
         new_post = Post(
             user=user_instance,
             estate=estate,
-            transaction=transaction_instance,
             dateFrom=timezone.now(),
             dateTo=(timezone.now() + timezone.timedelta(days=expireDays))
         )

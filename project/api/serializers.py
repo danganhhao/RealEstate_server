@@ -92,11 +92,12 @@ class EstateSerializer(serializers.ModelSerializer):
     province = serializers.SerializerMethodField('get_province')
     district = serializers.SerializerMethodField('get_district')
     project = serializers.SerializerMethodField('get_project')
+    transaction = serializers.SerializerMethodField('get_transaction')
 
     class Meta:
         model = Estate
         fields = ['id', 'title', 'images', 'province', 'district', 'contact',
-                  'project', 'area', 'price', 'created_day', 'lat', 'lng']
+                  'project', 'transaction', 'area', 'price', 'created_day', 'lat', 'lng']
 
     # def get_a_image(self, estate):
     #     img = EstateImage.objects.filter(estate=estate.id).first()
@@ -124,12 +125,18 @@ class EstateSerializer(serializers.ModelSerializer):
             return result
         return ""
 
+    def get_transaction(self, estate):
+        if estate.transaction:
+            return estate.transaction.name
+        return ""
+
 
 class EstateDetailSerializer(serializers.ModelSerializer):
     images = EstateImageSerializer(many=True, read_only=True)  # related_name = images
     estateType = serializers.SerializerMethodField('get_estateType')
     # estateStatus = serializers.SerializerMethodField('get_estateStatus')
     project = serializers.SerializerMethodField('get_project')
+    transaction = serializers.SerializerMethodField('get_transaction')
     province = serializers.SerializerMethodField('get_province')
     district = serializers.SerializerMethodField('get_district')
     ward = serializers.SerializerMethodField('get_ward')
@@ -137,8 +144,9 @@ class EstateDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Estate
-        fields = ['id', 'images', 'estateType', 'project', 'province', 'district', 'ward', 'street', 'addressDetail',
-                  'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact', 'lat', 'lng']
+        fields = ['id', 'images', 'estateType', 'project', 'transaction', 'province', 'district', 'ward', 'street',
+                  'addressDetail', 'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact',
+                  'lat', 'lng']
         # fields = '__all__'
 
     def get_estateType(self, estate):
@@ -159,6 +167,11 @@ class EstateDetailSerializer(serializers.ModelSerializer):
             result['lat'] = estate.project.lat
             result['lng'] = estate.project.lng
             return result
+        return ""
+
+    def get_transaction(self, estate):
+        if estate.transaction:
+            return estate.transaction.name
         return ""
 
     def get_province(self, estate):
@@ -187,6 +200,7 @@ class EstateDetailForIsApprovedSerializer(serializers.ModelSerializer):  # only 
     estateType = serializers.SerializerMethodField('get_estateType')
     # estateStatus = serializers.SerializerMethodField('get_estateStatus')
     project = serializers.SerializerMethodField('get_project')
+    transaction = serializers.SerializerMethodField('get_transaction')
     province = serializers.SerializerMethodField('get_province')
     district = serializers.SerializerMethodField('get_district')
     ward = serializers.SerializerMethodField('get_ward')
@@ -194,9 +208,9 @@ class EstateDetailForIsApprovedSerializer(serializers.ModelSerializer):  # only 
 
     class Meta:
         model = Estate
-        fields = ['id', 'images', 'estateType', 'project', 'province', 'district', 'ward', 'street', 'addressDetail',
-                  'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact', 'lat', 'lng',
-                  'isApproved']
+        fields = ['id', 'images', 'estateType', 'project', 'transaction', 'province', 'district', 'ward', 'street',
+                  'addressDetail', 'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact',
+                  'lat', 'lng', 'isApproved']
         # fields = '__all__'
 
     def get_estateType(self, estate):
@@ -217,6 +231,11 @@ class EstateDetailForIsApprovedSerializer(serializers.ModelSerializer):  # only 
             result['lat'] = estate.project.lat
             result['lng'] = estate.project.lng
             return result
+        return ""
+
+    def get_transaction(self, estate):
+        if estate.transaction:
+            return estate.transaction.name
         return ""
 
     def get_province(self, estate):
@@ -245,15 +264,16 @@ class EstateDetailForCurrentUserSerializer(serializers.ModelSerializer):
     estateType = serializers.SerializerMethodField('get_estateType')
     project = serializers.SerializerMethodField('get_project')
     province = serializers.SerializerMethodField('get_province')
+    transaction = serializers.SerializerMethodField('get_transaction')
     district = serializers.SerializerMethodField('get_district')
     ward = serializers.SerializerMethodField('get_ward')
     street = serializers.SerializerMethodField('get_street')
 
     class Meta:
         model = Estate
-        fields = ['id', 'images', 'estateType', 'project', 'province', 'district', 'ward', 'street', 'addressDetail',
-                  'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact', 'lat', 'lng',
-                  'isApproved']
+        fields = ['id', 'images', 'estateType', 'project', 'transaction', 'province', 'district', 'ward', 'street',
+                  'addressDetail', 'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact',
+                  'lat', 'lng', 'isApproved']
 
     def get_estateType(self, estate):
         if estate.estateType:
@@ -270,6 +290,14 @@ class EstateDetailForCurrentUserSerializer(serializers.ModelSerializer):
             result['name'] = estate.project.name
             result['lat'] = estate.project.lat
             result['lng'] = estate.project.lng
+            return result
+        return ""
+
+    def get_transaction(self, estate):
+        if estate.transaction:
+            result = {}
+            result['id'] = estate.transaction.id
+            result['name'] = estate.transaction.name
             return result
         return ""
 

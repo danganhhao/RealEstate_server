@@ -407,6 +407,7 @@ class PostInfo(APIView):
                 estateStatus_instance = EstateStatus.objects.get(id=10)
                 province_instance = Province.objects.get(id=province)
                 district_instance = District.objects.get(id=district)
+                transaction_instance = TransactionType.objects.get(id=transaction)
                 expireDays = int(expire_after)
                 if project:
                     project_instance = Project.objects.get(id=project)
@@ -438,6 +439,7 @@ class PostInfo(APIView):
                     ward=ward_instance,
                     addressDetail=address_detail,
                     street=street_instance,
+                    transaction=transaction_instance,
                     numberOfRoom=numberOfRoom,
                     description=description,
                     detail=detail,
@@ -470,11 +472,10 @@ class PostInfo(APIView):
 
                 # ------------------- Create Post ---------------------#
                 user_instance = User.objects.get(id=user_id)
-                transaction_instance = TransactionType.objects.get(id=transaction)
+
                 new_post = Post(
                     user=user_instance,
                     estate=estate,
-                    transaction=transaction_instance,
                     dateFrom=timezone.now(),
                     dateTo=(timezone.now() + timezone.timedelta(days=expireDays))
                 )
@@ -562,6 +563,9 @@ class PostInfo(APIView):
                         estate.ward = ward_instance
                     else:
                         estate.ward = None
+                    if transaction is not None and transaction != '':
+                        transaction_instance = TransactionType.objects.get(id=transaction)
+                        estate.transaction = transaction_instance
                     if street is not None and street != '':
                         street_instance = Street.objects.get(id=street)
                         estate.street = street_instance
@@ -611,9 +615,6 @@ class PostInfo(APIView):
                     # ------------------- Modify Post ---------------------#
                     # user_instance = User.objects.get(id=user_id)
                     post_obj = Post.objects.get(estate=estate)
-                    if transaction is not None and transaction != '':
-                        transaction_instance = TransactionType.objects.get(id=transaction)
-                        post_obj.transaction = transaction_instance
                     if expire_after is not None and expire_after != '':
                         expireDays = int(expire_after)
                         if expireDays > 90:
@@ -978,6 +979,7 @@ class SearchEngine(APIView):
             m_keyword = json_data.get('keyword', None)
             m_sort = json_data.get('sort', None)
             m_estate_type = json_data.get('estate_type', None)
+            m_transaction = json_data.get('transaction', None)
             m_filter_max_price = json_data.get('filter_max_price', None)
             m_filter_min_price = json_data.get('filter_min_price', None)
             m_filter_area = json_data.get('filter_area', None)
@@ -992,6 +994,10 @@ class SearchEngine(APIView):
             # --------------- Filter estate type ------------------
             if m_estate_type is not None and m_estate_type != "":
                 estate = estate.filter(estateType=m_estate_type)
+
+            # --------------- Filter transaction  ------------------
+            if m_transaction is not None and m_transaction != "":
+                estate = estate.filter(transaction=m_transaction)
 
             # --------------- Search with keyword -----------------
             if m_keyword is not None and m_keyword != "":

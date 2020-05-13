@@ -66,7 +66,7 @@ class ProjectDisplay(admin.ModelAdmin):
 
 
 class EstateDisplay(admin.ModelAdmin):
-    list_display = ('id', 'title', 'estateType', 'project', 'province', 'district', 'isApproved')
+    list_display = ('id', 'title', 'estateType', 'transaction', 'project', 'province', 'district', 'isApproved')
     list_display_links = ('id', 'title')
     search_fields = ('id', 'title', 'province__name', 'district__name', 'isApproved')
     list_per_page = 25
@@ -109,7 +109,7 @@ class EstateImageDisplay(admin.ModelAdmin):
 
 
 class PostDisplay(admin.ModelAdmin):
-    list_display = ('id', 'user', 'estate', 'transaction', 'dateFrom', 'dateTo')
+    list_display = ('id', 'user', 'estate', 'dateFrom', 'dateTo')
     list_display_links = ('id', 'user', 'estate')
     search_fields = ('id', 'user__name', 'estate__title', 'transaction__name')
     list_per_page = 25
