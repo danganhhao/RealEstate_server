@@ -301,19 +301,26 @@ class PostInfo(APIView):
                 user_id = request.GET.get('id')  # required
                 page = request.GET.get('page', 1)
                 try:
+                    # user_instance = User.objects.get(id=user_id)
+                    # post_obj = Post.objects.filter(user=user_instance).order_by('-id')
+                    # estate = Estate.objects.filter(Q(post__in=post_obj) & Q(isApproved=1))
                     user_instance = User.objects.get(id=user_id)
                     post_obj = Post.objects.filter(user=user_instance).order_by('-id')
-                    for p_obj in post_obj:
-                        if p_obj.estate.isApproved != 1:
-                            post_obj = post_obj.exclude(id=p_obj.id)
+                    # for p_obj in post_obj:
+                    #     if p_obj.estate.isApproved != 1:
+                    #         post_obj = post_obj.exclude(id=p_obj.id)
                     paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
                     try:
                         post_sub_obj = paginator.page(page)
                         serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True) #
+                        final_data = []
+                        for s in serializer.data:
+                            if s['estate']['isApproved'] == 1:
+                                final_data.append(s)
                         result = {}
                         result['current_page'] = str(page)
                         result['total_page'] = str(paginator.num_pages)
-                        result['result'] = serializer.data
+                        result['result'] = final_data
                         return Response(result)
                     except EmptyPage:
                         error_header = {'error_code': EC_FAIL, 'error_message': 'fail - index out of range'}
