@@ -1,0 +1,219 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+{% block extrahead %}
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min.js"></script>
+<script>
+        var randomColorGenerator = function () {
+            return '#' + (Math.random().toString(16) + '0000000').slice(2, 8);
+        };
+
+        var options = {
+            responsive: true,
+            maintainAspectRatio: true,
+            legend: {
+                position: 'left'
+            },
+            title: {
+                display: true
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        };
+        window.onload = function () {
+            var ctx = document.getElementById("province-chart");
+            {% regroup cl.queryset by province as province_list %}
+            lineChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [{% for province in province_list %}
+                    {% if province.grouper != None %} '{{ province.grouper }}',
+                    {% endif %}{% endfor %}],
+                    datasets: [{
+                        data: [{% for province in province_list %}
+                        {% if province.grouper != None %} '{{ province.list|length }}',
+                        {% endif %} {% endfor %}],
+                        backgroundColor: [{% for province in province_list %}
+                        {% if province.grouper != None %}randomColorGenerator(),{% endif %}{% endfor %}]
+                    }]
+                }, options: options
+            });
+
+            ctx = document.getElementById("district-chart");
+            {% regroup cl.queryset by district as district_list %}
+            lineChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [{% for district in district_list %}
+                    {% if district.grouper != None %} '{{ district.grouper }}',
+                    {% endif %}{% endfor %}],
+                    datasets: [{
+                        data: [{% for district in district_list %}
+                        {% if district.grouper != None %} '{{ district.list|length }}',
+                        {% endif %} {% endfor %}],
+                        backgroundColor: [{% for district in district_list %}
+                        {% if district.grouper != None %}randomColorGenerator(),{% endif %}{% endfor %}]
+                    }]
+                }, options: options
+            });
+
+            ctx = document.getElementById("estateType-chart");
+            {% regroup cl.queryset by estateType as estateType_list %}
+            lineChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [{% for estateType in estateType_list %}
+                    {% if estateType.grouper != None %} '{{ estateType.grouper }}',
+                    {% endif %}{% endfor %}],
+                    datasets: [{
+                        data: [{% for estateType in estateType_list %}
+                        {% if estateType.grouper != None %} '{{ estateType.list|length }}',
+                        {% endif %} {% endfor %}],
+                        backgroundColor: [{% for estateType in estateType_list %}
+                        {% if estateType.grouper != None %}randomColorGenerator(),{% endif %}{% endfor %}]
+                    }]
+                }, options: options
+            });
+
+            ctx = document.getElementById("price-chart");
+            {% regroup cl.queryset by price as price_list %}
+            var arrPrice = [];
+            var arrArea = [];
+            {% for item in cl.queryset %}
+                {% if item.price != None %}
+                    arrPrice.push({{item.price}});
+                {% endif %}
+                {% if item.area != None %}
+                    arrArea.push({{item.area}});
+                {% endif %}
+            {% endfor %}
+
+
+             function inRange (x) {
+                    return this[0] <= x && x <= this[1]
+             }
+
+             var dict_area = [];
+
+             var resultRange0_30 = arrArea.filter(inRange, [0, 30]).length
+             var resultRange30_50 = arrArea.filter(inRange, [31, 50]).length
+             var resultRange50_70 = arrArea.filter(inRange, [51, 70]).length
+             var resultRange70_100 = arrArea.filter(inRange, [71, 100]).length
+             var resultRange100_150 = arrArea.filter(inRange, [101, 150]).length
+             var resultRange150_250 = arrArea.filter(inRange, [151, 250]).length
+             var resultRange250_500 = arrArea.filter(inRange, [251, 500]).length
+             var resultRange500_1000 = arrArea.filter(inRange, [501, 1000]).length
+             var resultRange1000_2000 = arrArea.filter(inRange, [1001, 2000]).length
+             var resultRange2000_max = arrArea.filter(inRange, [2001, 999999999]).length
+
+             dict_area.push({ key: "< 30 m2", value: resultRange0_30});
+             dict_area.push({ key: "30 - 50 m2", value: resultRange30_50});
+             dict_area.push({ key: "50 - 70 m2", value: resultRange50_70});
+             dict_area.push({ key: "70 - 100 m2", value: resultRange70_100});
+             dict_area.push({ key: "100 - 150 m2", value: resultRange100_150});
+             dict_area.push({ key: "150 - 250 m2", value: resultRange150_250});
+             dict_area.push({ key: "250 - 500 m2", value: resultRange250_500});
+             dict_area.push({ key: "500 - 1000 m2", value: resultRange500_1000});
+             dict_area.push({ key: "1000 - 2000 m2", value: resultRange1000_2000});
+             dict_area.push({ key: "> 2000 m2", value: resultRange2000_max});
+
+            var list_label_area = []
+            var list_data_area = []
+            var list_color_area = []
+            for (var i = 0, len = dict_area.length; i < len; i++) {
+                    list_label_area.push(dict_area[i].key);
+                    list_data_area.push(dict_area[i].value);
+                    list_color_area.push(randomColorGenerator());
+                }
+            lineChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: list_label_area,
+                    datasets: [{
+                        data: list_data_area,
+                        backgroundColor: list_color_area }]
+                }, options: options
+            });
+
+            ctx = document.getElementById("area-chart");
+            {% regroup cl.queryset by area as area_list %}
+
+
+            var dict_price = [];
+
+             var resultRange0_500 = arrPrice.filter(inRange, [0, 500]).length
+             var resultRange500_800 = arrPrice.filter(inRange, [501, 800]).length
+             var resultRange800_1000 = arrPrice.filter(inRange, [801, 1000]).length
+             var resultRange1000_2000 = arrPrice.filter(inRange, [1001, 2000]).length
+             var resultRange2000_3000 = arrPrice.filter(inRange, [2001, 3000]).length
+             var resultRange3000_5000 = arrPrice.filter(inRange, [3001, 5000]).length
+             var resultRange5000_7000 = arrPrice.filter(inRange, [5001, 7000]).length
+             var resultRange7000_10000 = arrPrice.filter(inRange, [7001, 10000]).length
+             var resultRange10000_15000 = arrPrice.filter(inRange, [10001, 15000]).length
+             var resultRange15000_30000 = arrPrice.filter(inRange, [15001, 30000]).length
+             var resultRange30000_max = arrPrice.filter(inRange, [30001, 999999999]).length
+
+             dict_price.push({ key: "< 500 triệu", value: resultRange0_500});
+             dict_price.push({ key: "500 - 800 triệu", value: resultRange500_800});
+             dict_price.push({ key: "800 triệu - 1 tỷ", value: resultRange800_1000});
+             dict_price.push({ key: "1 - 2 tỷ", value: resultRange1000_2000});
+             dict_price.push({ key: "2 - 3 tỷ", value: resultRange2000_3000});
+             dict_price.push({ key: "3 - 5 tỷ", value: resultRange3000_5000});
+             dict_price.push({ key: "5 - 7 tỷ", value: resultRange5000_7000});
+             dict_price.push({ key: "7 - 10 tỷ", value: resultRange7000_10000});
+             dict_price.push({ key: "10 - 15 tỷ", value: resultRange10000_15000});
+             dict_price.push({ key: "15 - 30 tỷ", value: resultRange15000_30000});
+             dict_price.push({ key: "> 30 tỷ", value: resultRange30000_max});
+
+            var list_label_price = []
+            var list_data_price = []
+            var list_color_price = []
+            for (var i = 0, len = dict_price.length; i < len; i++) {
+                    list_label_price.push(dict_price[i].key);
+                    list_data_price.push(dict_price[i].value);
+                    list_color_price.push(randomColorGenerator());
+                }
+
+
+            lineChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: list_label_price,
+                    datasets: [{
+                        data: list_data_price,
+                        backgroundColor: list_color_price
+                    }]
+                }, options: options
+            });
+        }
+
+
+
+
+</script>
+{% endblock %}
+{% block content %}
+<h1> Graphs </h1>
+<hr>
+<div class="row">
+    <div class="col-sm-4">
+        <canvas id="province-chart" style="width: 100px !important;"></canvas>
+    </div>
+    <div class="col-sm-4">
+        <canvas id="district-chart" style="width: 100px !important;"></canvas>
+    </div>
+    <div class="col-sm-4">
+        <canvas id="estateType-chart" style="width: 100px !important;"></canvas>
+    </div>
+    <div class="col-sm-4">
+        <canvas id="price-chart" style="width: 100px !important;"></canvas>
+    </div>
+    <div class="col-sm-4">
+        <canvas id="area-chart" style="width: 100px !important;"></canvas>
+    </div>
+</div>
+{{ block.super }}
+{% endblock %}

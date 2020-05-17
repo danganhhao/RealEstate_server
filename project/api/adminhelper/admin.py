@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from api.models import Estate, EstateImage
+from api.models import Estate, EstateImage, Tracking
 import cloudinary.uploader
 
 """
@@ -141,3 +141,5 @@ class TrackingDisplay(admin.ModelAdmin):
     list_display_links = ('id', 'deviceId')
     search_fields = ('id', 'deviceId')
     list_per_page = 25
+    change_list_template = 'change_list_tracking_graph.html'
+
