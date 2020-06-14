@@ -25,6 +25,9 @@ class EstateType(models.Model):
     def __str__(self):
         return self.name
 
+    def get_id(self):
+        return self.id
+
 
 # EstateStatus table (ex: bought, sold,...)
 class EstateStatus(models.Model):
@@ -32,6 +35,9 @@ class EstateStatus(models.Model):
 
     def __str__(self):
         return self.status
+
+    def get_id(self):
+        return self.id
 
 
 # Type transaction table: buy or sell
@@ -45,6 +51,9 @@ class TransactionType(models.Model):
     def __str__(self):
         return self.name
 
+    def get_id(self):
+        return self.id
+
 
 # Province table:
 class Province(models.Model):
@@ -54,6 +63,9 @@ class Province(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_id(self):
+        return self.id
 
 
 # District table:
@@ -65,6 +77,9 @@ class District(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_id(self):
+        return self.id
 
 
 # Ward table:
