@@ -1,12 +1,51 @@
-from api.models import *
-from api.serializers import *
-import csv
+import math
 
-try:
-    estate = Estate.objects.filter(isApproved=1).order_by('-id')
+from api.models import Estate
+import pandas as pd
+import numpy as np
+from scipy import spatial
 
-except KeyError:
-    error_header = {'error_code': 0, 'error_message': 'Missing require fields'}
+def check2EstateSameLocation(d1, d2):
+    for t in range(0, 5):
+        if d1[t] != d2[t]:
+            return False
+        return True
 
-except Exception as e:
-    error_header = {'error_code': 0, 'error_message': 'fail - ' + str(e)}
+
+# table = [['id', 'estateType', 'province', 'district', 'transaction',  'numberOfRoom', 'price', 'area']]
+table = []
+estates = Estate.objects.raw('SELECT * FROM api_estate')
+for estate in estates:
+    item = []
+    item.append(estate.estateType.get_id())
+    item.append(estate.province.get_id())
+    item.append(estate.district.get_id())
+    item.append(estate.transaction.get_id())
+    item.append(estate.numberOfRoom)
+    item.append(estate.price)
+    item.append(estate.area)
+    table.append(item)
+
+data = np.asarray(table)
+max_in_col = np.amax(data, axis=0)
+start = 4
+data[:,start] = np.true_divide(data[:,start], max_in_col[start])
+data[:,start + 1] = np.true_divide(data[:,start + 1], max_in_col[start + 1])
+data[:,start + 2] = np.true_divide(data[:,start + 2], max_in_col[start + 2])
+
+# pd.DataFrame(data).to_csv("estates.csv", index=None)
+
+n_estate = len(table)
+sim_matrix = np.arange(64 * 64).reshape(n_estate,n_estate)
+for i in range (0, n_estate - 1):
+    for j in range (i + 1, n_estate):
+        # sim_matrix[i, j] = 1- spatial.distance.cosine(data[i], data[j])
+        if check2EstateSameLocation(data[i], data[j]):
+            dis = spatial.distance.cosine(data[i], data[j])
+        else:
+            dis = -10
+        sim_matrix[i, j] = dis
+        # sim_matrix[j, i] = dis
+
+pd.DataFrame(sim_matrix, dtype=np.float).to_csv("sim_matrix.csv", index=None, header=None)
+# numpy.savetxt("estates.csv", table, delimiter=",")
