@@ -31,13 +31,14 @@ def get_similar_items(item_id, number):
     # idIndex = read_idIndex_file("recommender/idIndex.csv")
     # sim_matrix = read_sim_matrix_file("recommender/sim_matrix.csv")
     index = int([k for k, v in idIndex.items() if v == item_id][0])
-    ind = sim_matrix[index].argsort()[-number:][::-1]
+    ind = sim_matrix[index].argsort()[:number][::-1]
     res = []
     for i in ind:
         res.append(idIndex[str(i)])
-    return ind
+    return res
 
 
 if __name__ == "__main__":
-    get_similar_items('68', 5)
+    res = get_similar_items('68', 5)
+    print('res = ', res)
 

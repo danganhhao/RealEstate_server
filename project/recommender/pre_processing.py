@@ -1,16 +1,25 @@
 import csv
+import math
 
 from api.models import Estate
 import pandas as pd
 import numpy as np
 from scipy import spatial
 
-
+print('start pre_processing')
 def check2EstateSameLocation(d1, d2):
     for t in range(0, 5):
         if d1[t] != d2[t]:
             return False
         return True
+
+def euclid_distance(v1, v2):
+    l = len(v1)
+    sum = 0
+    for i in range(0, l):
+        sum += (v1[i] - v2[i])*(v1[i] - v2[i])
+    return math.sqrt(sum)
+
 
 table = []
 idIndex = {}
@@ -39,9 +48,10 @@ sim_matrix = np.zeros(shape=(n_estate, n_estate))
 for i in range(0, n_estate):
     for j in range(0, n_estate):
         if check2EstateSameLocation(data[i], data[j]):
-            dis = 1 - spatial.distance.cosine(data[i], data[j])
+            # dis = spatial.distance.cosine(data[i], data[j])
+            dis = euclid_distance(data[i], data[j])
         else:
-            dis = -float('inf')
+            dis = float('inf')
         sim_matrix[i, j] = dis
 
 pd.DataFrame(sim_matrix, dtype=np.float).to_csv("recommender/sim_matrix.csv", index=None, header=None)
