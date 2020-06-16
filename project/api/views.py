@@ -14,6 +14,7 @@ from rest_framework.response import Response
 
 from api.models import *
 from api.serializers import *
+from recommender.processing import get_similar_items
 from user.helper.authentication import Authentication
 from user.helper.json import create_json_response
 from user.helper.utils import *
@@ -312,7 +313,7 @@ class PostInfo(APIView):
                     paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
                     try:
                         post_sub_obj = paginator.page(page)
-                        serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True) #
+                        serializer = PostSerializer(post_sub_obj, context={"request": request}, many=True)  #
                         final_data = []
                         for s in serializer.data:
                             if s['estate']['isApproved'] == 1:
@@ -339,7 +340,8 @@ class PostInfo(APIView):
                     paginator = Paginator(post_obj, ITEMS_PER_PAGE, allow_empty_first_page=True)
                     try:
                         post_sub_obj = paginator.page(page)
-                        serializer = PostForCurrentUserSerializer(post_sub_obj, context={"request": request}, many=True) #
+                        serializer = PostForCurrentUserSerializer(post_sub_obj, context={"request": request},
+                                                                  many=True)  #
                         result = {}
                         result['current_page'] = str(page)
                         result['total_page'] = str(paginator.num_pages)
@@ -548,7 +550,7 @@ class PostInfo(APIView):
                 lat = 0
             if lng == "":
                 lng = 0
-                
+
             try:
                 # ------------------- Modify Estate ---------------------#
                 estate = Estate.objects.get(id=estate_id)
@@ -730,7 +732,7 @@ class MyPostInfo(APIView):
                     user_instance = User.objects.get(id=user_id)
                     estate_instance = Estate.objects.get(id=estate_id)
                     post_obj = Post.objects.filter(user=user_instance, estate=estate_instance)
-                    serializer = PostForCurrentUserSerializer(post_obj, context={"request": request}, many=True) #
+                    serializer = PostForCurrentUserSerializer(post_obj, context={"request": request}, many=True)  #
                     return Response(serializer.data)
 
                 except User.DoesNotExist:
@@ -1457,6 +1459,31 @@ class CityInfo(APIView):
             result.append({"id": BD_ID, "name": BD_NAME, "total_estate": num_bd, "images": BD_IMG})
             print(result)
             return Response(result)
+        except Exception as e:
+            print(e)
+            error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class RelatedEstateInfo(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+    /relateestate/<int:id>
+    Receive:
+    """
+
+    def get(self, request, id):
+        try:
+            estate = Estate.objects.get(id=id)
+            estate_info = []
+            estate_info.append(estate.province.get_id())
+            estate_info.append(estate.district.get_id())
+            estate_info.append(estate.estateType.get_id())
+            estate_info.append(estate.transaction.get_id())
+            list_related_estate = get_similar_items(estate.id, estate_info, 5)
+            list_estate_info = Estate.objects.filter(id__in=list_related_estate)
+            serializer = EstateSerializer(list_estate_info, many=True)
+            return Response(serializer.data)
         except Exception as e:
             print(e)
             error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + str(e)}

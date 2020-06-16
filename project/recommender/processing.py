@@ -14,7 +14,7 @@ def get_sim_matrix(estate_location_info):
     estate_location_info: [province_id, district_id, estate_type, transaction_type]
     return: {sim_matrix: 2D array, list_estate_id: []}
     """
-    whole_sim_matrix = read_sim_matrix_file("sim_matrix_data.txt")
+    whole_sim_matrix = read_sim_matrix_file("recommender/sim_matrix_data.txt")
     province_id = estate_location_info[0]
     district_id = estate_location_info[1]
     estate_type = estate_location_info[2]
