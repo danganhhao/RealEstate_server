@@ -22,7 +22,7 @@ def get_sim_matrix(estate_location_info):
     return whole_sim_matrix[province_id][district_id][estate_type][transaction_type]
 
 
-def get_similar_items(item_id, item_info, k=5):
+def get_similar_items(item_id, item_info, k):
     sim_matrix_info = get_sim_matrix(item_info)
     sim_matrix = sim_matrix_info["sim_matrix"]
     id_index = sim_matrix_info["list_estate_id"]

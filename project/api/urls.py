@@ -41,7 +41,7 @@ urlpatterns = [
     path('favoriteid/', FavoriteIDInfo.as_view(), name='favorite_estate_id'),
     url(r'^news/$', NewsInfo.as_view(), name='news'),
     path('cityinfo/', CityInfo.as_view(), name='city_info'),
-    path('relatedestate/<int:id>', RelatedEstateInfo.as_view(), name='related_estate'),
+    path('relatedestate/<int:id>/<int:k>', RelatedEstateInfo.as_view(), name='related_estate'),
     path('adddata/', AddData.as_view(), name='add_data'),
 
 ]
