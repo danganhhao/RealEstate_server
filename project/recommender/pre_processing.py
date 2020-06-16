@@ -85,7 +85,7 @@ def calc_sim_matrix(listEstate):
 
 
 def save_object_sim_data_to_file(estatesByLocation):
-    with open('sim_matrix_data.txt', 'w') as f:
+    with open('recommender/sim_matrix_data.txt', 'w') as f:
         print(estatesByLocation, file=f)
 
 
@@ -125,9 +125,11 @@ for provinceId in estatesByLocation:
             estateSameType = estateInDistrict[estateType]
             for transactionType in estateSameType:
                 estateArraySameLocation = estateSameType[transactionType]  # [[id, numRoom, price, area]]
-                listEstateIdSameLocation = get_list_estate_id(estateArraySameLocation)  # pop first element of each estate
+                listEstateIdSameLocation = get_list_estate_id(
+                    estateArraySameLocation)  # pop first element of each estate
                 simMatrix = calc_sim_matrix(estateArraySameLocation)
-                estatesByLocation[provinceId][districtId][estateType][transactionType] = {"sim_matrix": simMatrix,"list_estate_id": listEstateIdSameLocation}
+                estatesByLocation[provinceId][districtId][estateType][transactionType] = {"sim_matrix": [list(row) for row in list(simMatrix)],
+                                                                                          "list_estate_id": listEstateIdSameLocation}
 
 print("\n------- Done ------------\n")
 
