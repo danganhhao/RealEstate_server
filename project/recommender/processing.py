@@ -29,7 +29,7 @@ def get_similar_items(item_id, item_info, k=5):
     cur_id_index = id_index.index(item_id)
     ind = np.array(sim_matrix[cur_id_index]).argsort()[:k]
     id_index = np.asarray(id_index, dtype=np.int)
-    result = id_index[ind]
+    result = list(id_index[ind])
     return result
 
 

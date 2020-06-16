@@ -1481,6 +1481,7 @@ class RelatedEstateInfo(APIView):
             estate_info.append(estate.estateType.get_id())
             estate_info.append(estate.transaction.get_id())
             list_related_estate = get_similar_items(estate.id, estate_info, 5)
+            list_related_estate.remove(estate.id)
             list_estate_info = Estate.objects.filter(id__in=list_related_estate)
             serializer = EstateSerializer(list_estate_info, many=True)
             return Response(serializer.data)
