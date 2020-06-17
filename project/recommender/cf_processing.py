@@ -8,8 +8,7 @@ class CF(object):
     Description: ......
     """
 
-    def __init__(self, Y_data, user_index, item_index, k, dist_func=cosine_similarity, uuCF=1):
-        self.uuCF = uuCF  # user-user (1) or item-item (0) CF
+    def __init__(self, Y_data, user_index, item_index, k, dist_func=cosine_similarity):
         self.Y_data = Y_data  # if uuCF else Y_data[:, [1, 0, 2]]
         self.user_index = user_index
         self.item_index = item_index
@@ -17,7 +16,6 @@ class CF(object):
         self.dist_func = dist_func
         self.Ybar_data = None
         self.S = None
-        # number of users and items. Remember to add 1 since id starts from 0
         self.n_items, self.n_users = Y_data.shape  # int(np.max(self.Y_data[:, 0])) + 1
 
     def add(self, new_data):
@@ -71,37 +69,28 @@ class CF(object):
     def fit(self):
         self.refresh()
 
-    def __pred(self, u, i, normalized=1):
+    def pred(self, c_user_index, c_item_index):
         """
         predict the rating of user u for item i (normalized)
         if you need the un
         """
-        # Step 1: find all users who rated i
-        ids = np.where(self.Y_data[:, 1] == i)[0].astype(np.int32)
-        # Step 2:
-        users_rated_i = (self.Y_data[ids, 0]).astype(np.int32)
-        # Step 3: find similarity btw the current user and others
-        # who already rated i
-        sim = self.S[u, users_rated_i]
-        # Step 4: find the k most similarity users
-        a = np.argsort(sim)[-self.k:]
-        # and the corresponding similarity levels
-        nearest_s = sim[a]
-        # How did each of 'near' users rated item i
-        r = self.Ybar[i, users_rated_i[a]]
-        if normalized:
-            # add a small number, for instance, 1e-8, to avoid dividing by 0
-            return (r * nearest_s)[0] / (np.abs(nearest_s).sum() + 1e-8)
+        # Step 1: find all item which rated by user
+        c_user_rating = self.Ybar_data[:, c_user_index]
+        list_item_idx_rated = np.where(c_user_rating != 0)[0]  # list item_index, which rated by c_user
+        # Xác định item được rated bởi những user nào
+        similarities_item = self.S[c_item_index][list_item_idx_rated]  # Xác định similarities của i1 với các item khác
+        # find the k most similarity items
+        a = np.argsort(similarities_item)[-self.k:]
+        # # and the corresponding similarity levels
+        nearest_s = similarities_item[a]
+        # # How did each of 'near' users rated item i
+        r = c_user_rating[list_item_idx_rated[a]]
+        res = (r * nearest_s).sum() / (np.abs(nearest_s).sum() + 1e-8)
+        return res
 
-        return (r * nearest_s)[0] / (np.abs(nearest_s).sum() + 1e-8) + self.mu[u]
+    def recommend(self, item):
+        pass
 
-    def pred(self, u, i, normalized=1):
-        """
-        predict the rating of user u for item i (normalized)
-        if you need the un
-        """
-        if self.uuCF: return self.__pred(u, i, normalize)
-        return self.__pred(i, u, normalize)
 
     def check_user_exist(self, user_id):
         """
@@ -120,3 +109,27 @@ class CF(object):
             if item_id == value:
                 return key
         return -1
+
+    def print(self):
+        print("Y_data", self.Y_data)
+        print("Ybar_data", self.Ybar_data)
+        print("S_matrix", self.S)
+
+
+# test
+
+
+data = np.zeros(shape=(5, 7))
+data[0] = [5, 5, 2, 0, 1, -1, -1]
+data[1] = [4, -1, -1, 0, -1, 2, -1]
+data[2] = [-1, 4, 1, -1, -1, 1, 1]
+data[3] = [2, 2, 3, 4, 4, -1, 4]
+data[4] = [2, 0, 4, -1, -1, -1, 5]
+
+item_id_index = {0: 100, 1: 101, 2: 102, 3: 103, 4: 104}
+user_id_index = {0: 200, 1: 201, 2: 202, 3: 203, 4: 204, 5: 205, 6: 206}
+
+rs = CF(data, user_id_index, item_id_index, 2)
+rs.fit()
+rs.print()
+print(rs.pred(c_user_index=6, c_item_index=1))
