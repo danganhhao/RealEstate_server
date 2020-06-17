@@ -150,5 +150,6 @@ user_id_index = {0: 200, 1: 201, 2: 202, 3: 203, 4: 204, 5: 205, 6: 206}
 
 rs = CF(data, user_id_index, item_id_index, 2)
 rs.fit()
+rs.fit_Ybar_data()
 rs.print()
 print(rs.get_recommend_for_user(201))
