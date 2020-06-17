@@ -45,7 +45,7 @@ class CF(object):
         if m_item_index != -1 and m_user_index != -1:
             self.Y_data[m_item_index, m_user_index] = rating
 
-        # TODO: updata list_index
+        # TODO: update list_index
 
     def normalize_Y(self):
         self.Ybar_data = self.Y_data.copy()
@@ -151,4 +151,4 @@ user_id_index = {0: 200, 1: 201, 2: 202, 3: 203, 4: 204, 5: 205, 6: 206}
 rs = CF(data, user_id_index, item_id_index, 2)
 rs.fit()
 rs.print()
-print(rs.pred(c_user_index=6, c_item_index=1))
+print(rs.get_recommend_for_user(201))
