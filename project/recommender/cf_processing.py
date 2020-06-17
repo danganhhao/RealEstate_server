@@ -15,6 +15,7 @@ class CF(object):
         self.k = k  # number of neighbor points
         self.dist_func = dist_func
         self.Ybar_data = None
+        self.Ybar_normalized = None
         self.S = None
         self.n_items, self.n_users = Y_data.shape  # int(np.max(self.Y_data[:, 0])) + 1
 
@@ -44,6 +45,8 @@ class CF(object):
         if m_item_index != -1 and m_user_index != -1:
             self.Y_data[m_item_index, m_user_index] = rating
 
+        # TODO: updata list_index
+
     def normalize_Y(self):
         self.Ybar_data = self.Y_data.copy()
         for i in range(self.Ybar_data.shape[0]):
@@ -69,7 +72,7 @@ class CF(object):
     def fit(self):
         self.refresh()
 
-    def pred(self, c_user_index, c_item_index):
+    def pred(self, c_item_index, c_user_index):
         """
         predict the rating of user u for item i (normalized)
         if you need the un
@@ -88,9 +91,24 @@ class CF(object):
         res = (r * nearest_s).sum() / (np.abs(nearest_s).sum() + 1e-8)
         return res
 
-    def recommend(self, item):
-        pass
+    def fit_Ybar_data(self):
+        self.Ybar_normalized = self.Ybar_data.copy()
+        for m_item in range(self.Ybar_data.shape[0]):
+            for m_user in range(self.Ybar_data.shape[1]):
+                if self.Ybar_data[m_item, m_user] == 0:
+                    self.Ybar_normalized[m_item, m_user] = self.pred(m_item, m_user)
 
+    def get_recommend_for_user(self, user_id):
+        index = self.check_user_exist(user_id)
+        res = []
+        if index != -1:
+            c_user_rating = self.Ybar_data[:, index]
+            list_item_idx_rated = np.where(c_user_rating != 0)[0]
+            list_rating = self.Ybar_normalized[:, index]
+            for i in range(self.n_items):
+                if i not in list_item_idx_rated and list_rating[i] > 0:
+                    res.append(i)
+            return res
 
     def check_user_exist(self, user_id):
         """
@@ -113,6 +131,7 @@ class CF(object):
     def print(self):
         print("Y_data", self.Y_data)
         print("Ybar_data", self.Ybar_data)
+        print("Ybar_normalized", self.Ybar_normalized)
         print("S_matrix", self.S)
 
 
