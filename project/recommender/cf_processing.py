@@ -2,6 +2,11 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
+FILE_PATH_CF_DATA = "cf_data.csv"
+FILE_PATH_CF_DATA_NORMALIZED = "cf_data_normalized.csv"
+FILE_PATH_CF_ITEM_ID_INDEX = "cf_item_id_index.txt"
+FILE_PATH_CF_USER_ID_INDEX = "cf_user_id_index.txt"
+
 
 class CF(object):
     """
@@ -118,11 +123,11 @@ class CF(object):
             Export Ybar_normalized matrix to csv file.
             When want to get recommend estates for special user, you load this file and handle.
         """
-        pd.DataFrame(self.Ybar_normalized, dtype=np.float).to_csv("cf_data_normalized.csv", index=None, header=None)
-        with open("cf_item_id_index.txt", 'w') as f:
+        pd.DataFrame(self.Ybar_normalized, dtype=np.float).to_csv(FILE_PATH_CF_DATA_NORMALIZED, index=None, header=None)
+        with open(FILE_PATH_CF_ITEM_ID_INDEX, 'w') as f:
             for item in self.item_index:
                 f.write("%s\n" % item)
-        with open("cf_user_id_index.txt", 'w') as f:
+        with open(FILE_PATH_CF_USER_ID_INDEX, 'w') as f:
             for user in self.user_index:
                 f.write("%s\n" % user)
 
@@ -130,11 +135,11 @@ class CF(object):
         """
             Export Y_data (base matrix) to csv file. This file only contain rating of all user.
         """
-        pd.DataFrame(self.Y_data, dtype=np.float).to_csv("cf_data.csv", index=None, header=None)
-        with open("cf_item_id_index.txt", 'w') as f:
+        pd.DataFrame(self.Y_data, dtype=np.float).to_csv(FILE_PATH_CF_DATA, index=None, header=None)
+        with open(FILE_PATH_CF_ITEM_ID_INDEX, 'w') as f:
             for item in self.item_index:
                 f.write("%s\n" % item)
-        with open("cf_user_id_index.txt", 'w') as f:
+        with open(FILE_PATH_CF_USER_ID_INDEX, 'w') as f:
             for user in self.user_index:
                 f.write("%s\n" % user)
 
@@ -231,7 +236,7 @@ def get_recommend(user_id):
     """
         Return list item_id, it recommend for user_id
     """
-    data_origin, data_normalized, item_id_index, user_id_index = read_data_for_recommend('cf_data.csv', 'cf_data_normalized.csv', 'cf_item_id_index.txt', 'cf_user_id_index.txt')
+    data_origin, data_normalized, item_id_index, user_id_index = read_data_for_recommend(FILE_PATH_CF_DATA, FILE_PATH_CF_DATA_NORMALIZED, FILE_PATH_CF_ITEM_ID_INDEX, FILE_PATH_CF_USER_ID_INDEX)
     index = check_user_exist_for_recommend(user_id_index, user_id)
     res = []
     if index != -1:
@@ -250,8 +255,8 @@ def add_rating_data(new_data):
         Param: new_data is a list (new_data = [user_id, item_id, rating])
         Add data and export to Y_data (base_matrix) csv file
     """
-    data, item_id_index, user_id_index = read_data_for_train('cf_data.csv', 'cf_item_id_index.txt',
-                                                             'cf_user_id_index.txt')
+    data, item_id_index, user_id_index = read_data_for_train(FILE_PATH_CF_DATA, FILE_PATH_CF_ITEM_ID_INDEX,
+                                                             FILE_PATH_CF_USER_ID_INDEX)
     rs = CF(data, user_id_index, item_id_index, 2)
     rs.add(new_data)
     rs.export_added_rating()
@@ -261,7 +266,7 @@ def train():
     """
         Train models when have new information.
     """
-    data, item_id_index, user_id_index = read_data_for_train('cf_data.csv', 'cf_item_id_index.txt', 'cf_user_id_index.txt')
+    data, item_id_index, user_id_index = read_data_for_train(FILE_PATH_CF_DATA, FILE_PATH_CF_ITEM_ID_INDEX, FILE_PATH_CF_USER_ID_INDEX)
     rs = CF(data, user_id_index, item_id_index, 2)
     rs.fit()
     rs.export_normalized()
