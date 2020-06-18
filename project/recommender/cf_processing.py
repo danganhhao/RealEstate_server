@@ -21,8 +21,9 @@ class CF(object):
 
     def add(self, new_data):
         """
+            Param: new_data is a list (new_data = [user_id, item_id, rating])
             Update Y_data matrix when new ratings come.
-            For simplicity, suppose that there is no new user or item.
+            Update item_index, user_index if have new user/item rating.
         """
         user_id = new_data[0]
         item_id = new_data[1]
@@ -51,6 +52,9 @@ class CF(object):
             self.Y_data[m_item_index, m_user_index] = rating
 
     def normalize_Y(self):
+        """
+            Normalize origin matrix to Y_bar_data
+        """
         self.Ybar_data = self.Y_data.copy()
         for i in range(self.Ybar_data.shape[0]):
             mean_value = sum(y for y in self.Ybar_data[i] if y != -1) / (
@@ -62,6 +66,9 @@ class CF(object):
                     self.Ybar_data[i][j] = 0
 
     def similarity(self):
+        """
+            Calculate item-item similarity matrix S
+        """
         self.S = self.dist_func(self.Ybar_data, self.Ybar_data)
 
     def refresh(self):
@@ -78,12 +85,12 @@ class CF(object):
 
     def pred(self, c_item_index, c_user_index):
         """
-        predict the rating of user u for item i (normalized)
-        if you need the un
+            predict the rating of item i, which rated by user u (normalized)
         """
         # Step 1: find all item which rated by user
-        c_user_rating = self.Ybar_data[:, c_user_index]
-        list_item_idx_rated = np.where(c_user_rating != 0)[0]  # list item_index, which rated by c_user
+        c_user_rating_value = self.Ybar_data[:, c_user_index]
+        c_user_rating = self.Y_data[:, c_user_index]
+        list_item_idx_rated = np.where(c_user_rating != -1)[0]  # list item_index, which rated by c_user
         # Xác định item được rated bởi những user nào
         similarities_item = self.S[c_item_index][list_item_idx_rated]  # Xác định similarities của i1 với các item khác
         # find the k most similarity items
@@ -91,11 +98,15 @@ class CF(object):
         # # and the corresponding similarity levels
         nearest_s = similarities_item[a]
         # # How did each of 'near' users rated item i
-        r = c_user_rating[list_item_idx_rated[a]]
+        r = c_user_rating_value[list_item_idx_rated[a]]
         res = (r * nearest_s).sum() / (np.abs(nearest_s).sum() + 1e-8)
         return res
 
     def fit_Ybar_data(self):
+        """
+            Fit Ybar_matrix with predict value.
+            Storage to Ybar_normalized
+        """
         self.Ybar_normalized = self.Ybar_data.copy()
         for m_item in range(self.Ybar_data.shape[0]):
             for m_user in range(self.Ybar_data.shape[1]):
@@ -103,6 +114,10 @@ class CF(object):
                     self.Ybar_normalized[m_item, m_user] = self.pred(m_item, m_user)
 
     def export_normalized(self):
+        """
+            Export Ybar_normalized matrix to csv file.
+            When want to get recommend estates for special user, you load this file and handle.
+        """
         pd.DataFrame(self.Ybar_normalized, dtype=np.float).to_csv("cf_data_normalized.csv", index=None, header=None)
         with open("cf_item_id_index.txt", 'w') as f:
             for item in self.item_index:
@@ -112,6 +127,9 @@ class CF(object):
                 f.write("%s\n" % user)
 
     def export_added_rating(self):
+        """
+            Export Y_data (base matrix) to csv file. This file only contain rating of all user.
+        """
         pd.DataFrame(self.Y_data, dtype=np.float).to_csv("cf_data.csv", index=None, header=None)
         with open("cf_item_id_index.txt", 'w') as f:
             for item in self.item_index:
@@ -121,6 +139,9 @@ class CF(object):
                 f.write("%s\n" % user)
 
     def get_recommend_for_user(self, user_id):
+        """
+            Unused function
+        """
         index = self.check_user_exist(user_id)
         res = []
         if index != -1:
@@ -158,6 +179,9 @@ class CF(object):
 
 
 def read_data_for_train(data_file_name, item_id_index_file_name, user_id_index_file_name):
+    """
+        Load data to do train model.
+    """
     m_data = pd.read_csv(data_file_name, header=None, float_precision='round_trip')
     with open(item_id_index_file_name, 'r') as f:
         m_item_id_index = f.readlines()
@@ -179,6 +203,9 @@ def read_data_for_train(data_file_name, item_id_index_file_name, user_id_index_f
 
 
 def read_data_for_recommend(data_origin_file_name, data_normalized_file_name, item_id_index_file_name, user_id_index_file_name):
+    """
+        Load data to do get recommend for user.
+    """
     m_data_origin_file_name = pd.read_csv(data_origin_file_name, header=None, float_precision='round_trip')
     m_data_normalized_file_name = pd.read_csv(data_normalized_file_name, header=None, float_precision='round_trip')
     with open(item_id_index_file_name, 'r') as f:
@@ -201,6 +228,9 @@ def check_user_exist_for_recommend(list_user, user_id):
 
 
 def get_recommend(user_id):
+    """
+        Return list item_id, it recommend for user_id
+    """
     data_origin, data_normalized, item_id_index, user_id_index = read_data_for_recommend('cf_data.csv', 'cf_data_normalized.csv', 'cf_item_id_index.txt', 'cf_user_id_index.txt')
     index = check_user_exist_for_recommend(user_id_index, user_id)
     res = []
@@ -217,8 +247,8 @@ def get_recommend(user_id):
 
 def add_rating_data(new_data):
     """
-        Update Y_data matrix when new ratings come.
-        For simplicity, suppose that there is no new user or item.
+        Param: new_data is a list (new_data = [user_id, item_id, rating])
+        Add data and export to Y_data (base_matrix) csv file
     """
     data, item_id_index, user_id_index = read_data_for_train('cf_data.csv', 'cf_item_id_index.txt',
                                                              'cf_user_id_index.txt')
@@ -228,26 +258,14 @@ def add_rating_data(new_data):
 
 
 def train():
+    """
+        Train models when have new information.
+    """
     data, item_id_index, user_id_index = read_data_for_train('cf_data.csv', 'cf_item_id_index.txt', 'cf_user_id_index.txt')
     rs = CF(data, user_id_index, item_id_index, 2)
     rs.fit()
     rs.export_normalized()
 
 # train()
-add_rating_data([200, 100, 56.3333333])
-print(get_recommend(201))
-# data = np.zeros(shape=(5, 7))
-# data[0] = [5, 5, 2, 0, 1, -1, -1]
-# data[1] = [4, -1, -1, 0, -1, 2, -1]
-# data[2] = [-1, 4, 1, -1, -1, 1, 1]
-# data[3] = [2, 2, 3, 4, 4, -1, 4]
-# data[4] = [2, 0, 4, -1, -1, -1, 5]
-#
-# item_id_index = {0: 100, 1: 101, 2: 102, 3: 103, 4: 104}
-# user_id_index = {0: 200, 1: 201, 2: 202, 3: 203, 4: 204, 5: 205, 6: 206}
-#
-# rs = CF(data, user_id_index, item_id_index, 2)
-# rs.fit()
-# rs.fit_Ybar_data()
-# rs.print()
-# print(rs.get_recommend_for_user(201))
+# add_rating_data([200, 100, 56.3333333])
+print(get_recommend(205))
