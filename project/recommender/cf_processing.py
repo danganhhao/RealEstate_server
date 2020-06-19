@@ -30,6 +30,7 @@ class CF(object):
             Update Y_data matrix when new ratings come.
             Update item_index, user_index if have new user/item rating.
         """
+        self.Y_data = self.Y_data.to_numpy()
         user_id = new_data[0]
         item_id = new_data[1]
         rating = new_data[2]
@@ -60,6 +61,7 @@ class CF(object):
         """
             Normalize origin matrix to Y_bar_data
         """
+        self.Y_data = self.Y_data.to_numpy()
         self.Ybar_data = self.Y_data.copy()
         for i in range(self.Ybar_data.shape[0]):
             mean_value = sum(y for y in self.Ybar_data[i] if y != -1) / (
@@ -271,6 +273,6 @@ def train():
     rs.fit()
     rs.export_normalized()
 
-# train()
+train()
 # add_rating_data([200, 100, 56.3333333])
 print(get_recommend(205))
