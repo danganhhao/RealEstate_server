@@ -2,10 +2,10 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
-FILE_PATH_CF_DATA = "cf_data.csv"
-FILE_PATH_CF_DATA_NORMALIZED = "cf_data_normalized.csv"
-FILE_PATH_CF_ITEM_ID_INDEX = "cf_item_id_index.txt"
-FILE_PATH_CF_USER_ID_INDEX = "cf_user_id_index.txt"
+FILE_PATH_CF_DATA = "recommender/cf_data.csv"
+FILE_PATH_CF_DATA_NORMALIZED = "recommender/cf_data_normalized.csv"
+FILE_PATH_CF_ITEM_ID_INDEX = "recommender/cf_item_id_index.txt"
+FILE_PATH_CF_USER_ID_INDEX = "recommender/cf_user_id_index.txt"
 
 
 class CF(object):
@@ -64,8 +64,11 @@ class CF(object):
         self.Y_data = self.Y_data.to_numpy()
         self.Ybar_data = self.Y_data.copy()
         for i in range(self.Ybar_data.shape[0]):
-            mean_value = sum(y for y in self.Ybar_data[i] if y != -1) / (
-                    len(self.Ybar_data[i]) - np.count_nonzero(self.Ybar_data[i] == -1))
+            temp = (len(self.Ybar_data[i]) - np.count_nonzero(self.Ybar_data[i] == -1))
+            if temp != 0:
+                mean_value = sum(y for y in self.Ybar_data[i] if y != -1) / temp
+            else:
+                mean_value = 0
             for j in range(len(self.Ybar_data[i])):
                 if self.Ybar_data[i][j] != -1:
                     self.Ybar_data[i][j] -= mean_value

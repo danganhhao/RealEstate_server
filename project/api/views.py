@@ -1501,6 +1501,9 @@ class PostForYouInfo(APIView):
         :return
     """
 
+    def convertToNumber(self, s):
+        return int.from_bytes(s.encode(), 'little')
+
     def get(self, request):
         try:
             # Get recommend with user_id
@@ -1512,7 +1515,7 @@ class PostForYouInfo(APIView):
                 return Response(serializer.data)
 
             # Get recommend with device_id
-            device_id = request.GET.get('device_id', None)
+            device_id = self.convertToNumber(str(request.GET.get('device_id', None)))
             if isExistObject(device_id):
                 list_similar = get_recommend(device_id)
                 list_estate_info = Estate.objects.filter(id__in=list_similar)
@@ -1530,6 +1533,9 @@ class Rating(APIView):
         :param: device_id, item_id, rating score
     """
 
+    def convertToNumber(self, s):
+        return int.from_bytes(s.encode(), 'little')
+
     def post(self, request):
         try:
             json_data = request.data
@@ -1537,12 +1543,12 @@ class Rating(APIView):
             # add rating with device_id
             error_header, status_code = Authentication().authentication(request, type_token='user')
             if error_header['error_code'] == 0:
-                device_id = json_data.get('device_id', None)
+                device_id = self.convertToNumber(str(json_data.get('device_id', None)))
                 item_id = json_data.get('item_id', None)
                 rating = json_data.get('rating', None)
 
                 if isExistObject(device_id) and isExistObject(item_id) and isExistObject(rating):
-                    add_rating_data([(device_id), int(item_id), int(rating)])
+                    add_rating_data([int(device_id), int(item_id), int(rating)])
                     error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
                     return create_json_response(error_header, error_header, status_code=200)
 
