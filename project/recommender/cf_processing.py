@@ -253,6 +253,8 @@ def get_recommend(user_id):
             if i not in list_item_idx_rated and list_rating[i] > 0:
                 res.append(i)
         return np_item_id_index[res]
+    else:
+        return res
 
 
 def add_rating_data(new_data):
@@ -278,4 +280,4 @@ def train():
 
 train()
 # add_rating_data([200, 100, 56.3333333])
-print(get_recommend(205))
+# print(get_recommend(205))
