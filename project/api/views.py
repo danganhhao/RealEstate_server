@@ -14,6 +14,7 @@ from rest_framework.response import Response
 
 from api.models import *
 from api.serializers import *
+from recommender.cf_processing import add_rating_data, get_recommend
 from recommender.processing import get_similar_items
 from user.helper.authentication import Authentication
 from user.helper.json import create_json_response
@@ -1127,7 +1128,7 @@ class SearchOnMap(APIView):
             return create_json_response(error_header, error_header, status_code=200)
 
 
-class PostForYouInfo(APIView):
+class PostForYouInfoOld(APIView):  # Don't use
     parser_classes = (MultiPartParser,)
 
     """
@@ -1488,6 +1489,79 @@ class RelatedEstateInfo(APIView):
         except Exception as e:
             print(e)
             error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class PostForYouInfo(APIView):
+    parser_classes = (MultiPartParser,)
+
+    """
+        .../api/postforyou/
+        return all estate
+        :return
+    """
+
+    def get(self, request):
+        try:
+            # Get recommend with user_id
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code']:
+                list_similar = get_recommend(error_header['id'])
+                list_estate_info = Estate.objects.filter(id__in=list_similar)
+                serializer = EstateSerializer(list_estate_info, many=True)
+                return Response(serializer.data)
+
+            # Get recommend with device_id
+            device_id = request.GET.get('device_id', None)
+            if isExistObject(device_id):
+                list_similar = get_recommend(device_id)
+                list_estate_info = Estate.objects.filter(id__in=list_similar)
+                serializer = EstateSerializer(list_estate_info, many=True)
+                return Response(serializer.data)
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class Rating(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+        .../api/rating/
+        :param: device_id, item_id, rating score
+    """
+
+    def post(self, request):
+        try:
+            json_data = request.data
+
+            # add rating with device_id
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                device_id = json_data.get('device_id', None)
+                item_id = json_data.get('item_id', None)
+                rating = json_data.get('rating', None)
+
+                if isExistObject(device_id) and isExistObject(item_id) and isExistObject(rating):
+                    add_rating_data([(device_id), int(item_id), int(rating)])
+                    error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                    return create_json_response(error_header, error_header, status_code=200)
+
+            # add rating with user_id
+            user_id = error_header['id']
+            item_id = json_data.get('item_id', None)
+            rating = json_data.get('rating', None)
+
+            if isExistObject(user_id) and isExistObject(item_id) and isExistObject(rating):
+                add_rating_data([int(user_id), int(item_id), int(rating)])
+                error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
 
 
