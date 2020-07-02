@@ -1508,19 +1508,17 @@ class PostForYouInfo(APIView):
         try:
             # Get recommend with user_id
             error_header, status_code = Authentication().authentication(request, type_token='user')
+            list_similar = []
             if error_header['error_code']:
-                list_similar = get_recommend(error_header['id'])
-                list_estate_info = Estate.objects.filter(id__in=list_similar)
-                serializer = EstateSerializer(list_estate_info, many=True)
-                return Response(serializer.data)
+                list_similar = get_recommend(error_header['id'], isGetPopularItem=True)[:ITEMS_PER_PAGE]
+            else:  # Get recommend with device_id
+                device_id = self.convertToNumber(str(request.GET.get('device_id', None)))
+                if isExistObject(device_id):
+                    list_similar = get_recommend(device_id, isGetPopularItem=True)[:ITEMS_PER_PAGE]
 
-            # Get recommend with device_id
-            device_id = self.convertToNumber(str(request.GET.get('device_id', None)))
-            if isExistObject(device_id):
-                list_similar = get_recommend(device_id)
-                list_estate_info = Estate.objects.filter(id__in=list_similar)
-                serializer = EstateSerializer(list_estate_info, many=True)
-                return Response(serializer.data)
+            list_estate_info = Estate.objects.filter(id__in=list_similar)
+            serializer = EstateSerializer(list_estate_info, many=True)
+            return Response(serializer.data)
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)

@@ -65,8 +65,10 @@ class CF(object):
         self.Ybar_data = self.Y_data.copy()
         for i in range(self.Ybar_data.shape[0]):
             temp = (len(self.Ybar_data[i]) - np.count_nonzero(self.Ybar_data[i] == -1))
-            if temp != 0:
+            if temp != 0 and temp != 1:
                 mean_value = sum(y for y in self.Ybar_data[i] if y != -1) / temp
+            elif temp == 1:
+                mean_value = 2.5
             else:
                 mean_value = 0
             for j in range(len(self.Ybar_data[i])):
@@ -212,7 +214,8 @@ def read_data_for_train(data_file_name, item_id_index_file_name, user_id_index_f
     # return data, item_id_index, user_id_index
 
 
-def read_data_for_recommend(data_origin_file_name, data_normalized_file_name, item_id_index_file_name, user_id_index_file_name):
+def read_data_for_recommend(data_origin_file_name, data_normalized_file_name, item_id_index_file_name,
+                            user_id_index_file_name):
     """
         Load data to do get recommend for user.
     """
@@ -237,11 +240,14 @@ def check_user_exist_for_recommend(list_user, user_id):
         return -1
 
 
-def get_recommend(user_id):
+def get_recommend(user_id, isGetPopularItem=False):
     """
         Return list item_id, it recommend for user_id
     """
-    data_origin, data_normalized, item_id_index, user_id_index = read_data_for_recommend(FILE_PATH_CF_DATA, FILE_PATH_CF_DATA_NORMALIZED, FILE_PATH_CF_ITEM_ID_INDEX, FILE_PATH_CF_USER_ID_INDEX)
+    data_origin, data_normalized, item_id_index, user_id_index = read_data_for_recommend(FILE_PATH_CF_DATA,
+                                                                                         FILE_PATH_CF_DATA_NORMALIZED,
+                                                                                         FILE_PATH_CF_ITEM_ID_INDEX,
+                                                                                         FILE_PATH_CF_USER_ID_INDEX)
     index = check_user_exist_for_recommend(user_id_index, user_id)
     res = []
     if index != -1:
@@ -252,7 +258,15 @@ def get_recommend(user_id):
         for i in range(data_normalized.shape[0]):
             if i not in list_item_idx_rated and list_rating[i] > 0:
                 res.append(i)
-        return np_item_id_index[res]
+        if len(res) != 0:
+            return np_item_id_index[res]
+        if len(res) == 0 and isGetPopularItem:  # get popular item
+            top_rating_list = np.unravel_index(np.argsort(data_normalized.to_numpy().ravel())[-50:], data_normalized.shape)
+            item_index = top_rating_list[0]
+            item_index = list(set(item_index))  # remove duplicate
+            return item_index
+        return res
+
     else:
         return res
 
@@ -273,10 +287,12 @@ def train():
     """
         Train models when have new information.
     """
-    data, item_id_index, user_id_index = read_data_for_train(FILE_PATH_CF_DATA, FILE_PATH_CF_ITEM_ID_INDEX, FILE_PATH_CF_USER_ID_INDEX)
+    data, item_id_index, user_id_index = read_data_for_train(FILE_PATH_CF_DATA, FILE_PATH_CF_ITEM_ID_INDEX,
+                                                             FILE_PATH_CF_USER_ID_INDEX)
     rs = CF(data, user_id_index, item_id_index, 2)
     rs.fit()
     rs.export_normalized()
+
 
 train()
 # add_rating_data([200, 100, 56.3333333])
