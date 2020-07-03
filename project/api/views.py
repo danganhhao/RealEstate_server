@@ -1665,13 +1665,25 @@ class NotificationInfo(APIView):
             noti_data = NotificationData.objects.filter(userId=user_instance).order_by('-id')
             paginator = Paginator(noti_data, ITEMS_PER_PAGE, allow_empty_first_page=True)
             try:
-                # TODO: UPdate
                 noti_data_sub_obj = paginator.page(page)
-                serializer = NotificationDataSerializer(noti_data_sub_obj, many=True)
+                data = []
+                for _item in noti_data_sub_obj:
+                    item = {
+                        'id': str(_item.notificationId.id),
+                        'title': TITLE_NOTI,
+                        'body': str("Bất động sản \"" + str(_item.notificationId.estateId.title) + "\" gần đây đã được "
+                                                                                                "cập nhật thông tin "
+                                                                                                "mới.",),
+                        'estate_id': str(_item.notificationId.estateId.id),
+                        'timestamp': str(_item.notificationId.timestamp),
+                        'state': str(_item.state)
+                    }
+                    data.append(item)
+
                 result = {}
                 result['current_page'] = str(page)
                 result['total_page'] = str(paginator.num_pages)
-                result['result'] = serializer.data
+                result['result'] = data
                 return Response(result)
             except EmptyPage:
                 error_header = {'error_code': EC_FAIL, 'error_message': 'fail - index out of range'}

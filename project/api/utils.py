@@ -32,15 +32,15 @@ def storage_notification_data(estate_id):
 
 
 def get_body(notification):
-    body = {}
-    noti_body = {'title': TITLE_NOTI,
-                 'body': "Có sự thay đổi bất động sản \"" + str(notification.estateId.title) + "\""}
-
-    data_body = {'estate_id': str(notification.estateId.id), 'timestamp': str(notification.timestamp), 'state': "False"}
-
-    body['notification'] = noti_body
-    body['data'] = data_body
-    return body
+    data_body = {
+        'id': str(notification.id),
+        'title': TITLE_NOTI,
+        'body': "Bất động sản \"" + str(notification.estateId.title) + "\" gần đây đã được cập nhật thông tin mới.",
+        'estate_id': str(notification.estateId.id),
+        'timestamp': str(notification.timestamp),
+        'state': "False"
+    }
+    return data_body
 
 
 def send_notification(estate_id):
@@ -50,11 +50,13 @@ def send_notification(estate_id):
     for item in user_noti_token:
         list_user_noti_token.append(item.token)
 
-    body = get_body(notification)
+    data_body = get_body(notification)
     push_service = FCMNotification(api_key=settings.FIREBASE_SERVER_KEY)
 
-    message_title = "Real Estate"
+    message_title = TITLE_NOTI
+    message_body = "Bất động sản \"" + str(notification.estateId.title) + "\" gần đây đã được cập nhật thông tin mới."
+
     result = push_service.notify_multiple_devices(registration_ids=list_user_noti_token, message_title=message_title,
-                                                  message_body=body)
+                                                  message_body=message_body, data_message=data_body)
 
     print(result)
