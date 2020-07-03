@@ -449,3 +449,10 @@ class NewsSerializer(serializers.ModelSerializer):
         if news.newsType:
             return news.newsType.name
         return ""
+
+
+class NotificationDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationData
+        # fields = ['estate']
+        fields = '__all__'

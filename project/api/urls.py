@@ -43,6 +43,9 @@ urlpatterns = [
     path('cityinfo/', CityInfo.as_view(), name='city_info'),
     path('relatedestate/<int:id>/<int:k>', RelatedEstateInfo.as_view(), name='related_estate'),
     path('rating/', Rating.as_view(), name='rating'),
+    path('notification/registertoken/', FCMToken.as_view(), name='register_token'),
+    path('notification/markasread/<int:notification_id>', MarkNotiAsRead.as_view(), name='mark_as_read'),
+    path('notification/all/', NotificationInfo.as_view(), name='notification'),
     path('adddata/', AddData.as_view(), name='add_data'),
 
 ]

@@ -261,7 +261,7 @@ class NewsImage(models.Model):
 
 # Tracking table:
 class Tracking(models.Model):
-    deviceId = models.CharField(max_length=30)
+    deviceId = models.CharField(max_length=100)
     province = models.ForeignKey(Province, on_delete=models.CASCADE, null=True, blank=True)
     district = models.ForeignKey(District, on_delete=models.CASCADE, null=True, blank=True)
     estateType = models.ForeignKey(EstateType, on_delete=models.CASCADE, null=True, blank=True)
@@ -271,3 +271,33 @@ class Tracking(models.Model):
 
     def __str__(self):
         return str(self.deviceId)
+
+
+# Notification System
+
+# Notification table:
+class Notification(models.Model):
+    estateId = models.ForeignKey(Estate, on_delete=models.CASCADE, null=True, blank=True)
+    timestamp = models.DateTimeField()
+
+    def __str__(self):
+        return str(self.id)
+
+
+# UserNotiToken table
+class UserNotiToken(models.Model):
+    userId = models.ForeignKey('user.User', on_delete=models.CASCADE)
+    token = models.CharField(max_length=500)
+
+    def __str__(self):
+        return str(self.id)
+
+
+# NotificationData table
+class NotificationData(models.Model):
+    userId = models.ForeignKey('user.User', on_delete=models.CASCADE)
+    notificationId = models.ForeignKey(Notification, on_delete=models.CASCADE)
+    state = models.BooleanField(null=True, blank=True)
+
+    def __str__(self):
+        return str(self.id)

@@ -18,6 +18,8 @@ HN_ID = 2
 DN_ID = 3
 BD_ID = 4
 
+TITLE_NOTI = u'Thông tin bất động sản được thay đổi'
+
 HCM_NAME = u'Hồ Chí Minh'
 HN_NAME = u'Hà Nội'
 DN_NAME = u'Đà Nẵng'

@@ -14,6 +14,7 @@ from rest_framework.response import Response
 
 from api.models import *
 from api.serializers import *
+from api.utils import send_notification
 from recommender.cf_processing import add_rating_data, get_recommend
 from recommender.processing import get_similar_items
 from user.helper.authentication import Authentication
@@ -636,6 +637,9 @@ class PostInfo(APIView):
                         post_obj.dateTo = (post_obj.dateFrom + timezone.timedelta(days=expireDays))
                     post_obj.save()
                     estate.save()
+
+                    send_notification(estate_id)
+
                     error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
                     return create_json_response(error_header, error_header, status_code=200)
             except Estate.DoesNotExist:
@@ -1558,6 +1562,119 @@ class Rating(APIView):
             if isExistObject(user_id) and isExistObject(item_id) and isExistObject(rating):
                 add_rating_data([int(user_id), int(item_id), int(rating)])
                 error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+# Notification system
+class FCMToken(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+        .../api/notification/registertoken/
+        :param: token
+    """
+
+    def post(self, request):
+        try:
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            user_id = error_header['id']
+            json_data = request.data
+            token = json_data.get('token', None)
+            user_instance = User.objects.get(id=user_id)
+            user_noti_token = UserNotiToken.objects.filter(userId=user_instance)
+            if user_noti_token:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'User has fcm token'}
+                return create_json_response(error_header, error_header, status_code=200)
+
+            user_noti_token = UserNotiToken(userId=user_instance, token=token)
+            user_noti_token.save()
+
+            error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class MarkNotiAsRead(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+        .../api/notification/markasread/<int:notification_id>
+        :param: token
+    """
+
+    def get(self, request, notification_id):
+        try:
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            user_id = error_header['id']
+
+            noti_data = NotificationData.objects.get(userId=user_id, notificationId=notification_id)
+            if noti_data:
+                noti_data.state = True
+                noti_data.save()
+                error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+                return create_json_response(error_header, error_header, status_code=200)
+
+            error_header = {'error_code': EC_FAIL, 'error_message': EM_FAIL}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+class NotificationInfo(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+        .../api/notification/all/?page=<int:page_number>
+        :param: token
+    """
+
+    def get(self, request):
+        try:
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            user_id = error_header['id']
+            page = request.GET.get('page', 1)
+
+            user_instance = User.objects.get(id=user_id)
+            noti_data = NotificationData.objects.filter(userId=user_instance).order_by('-id')
+            paginator = Paginator(noti_data, ITEMS_PER_PAGE, allow_empty_first_page=True)
+            try:
+                # TODO: UPdate
+                noti_data_sub_obj = paginator.page(page)
+                serializer = NotificationDataSerializer(noti_data_sub_obj, many=True)
+                result = {}
+                result['current_page'] = str(page)
+                result['total_page'] = str(paginator.num_pages)
+                result['result'] = serializer.data
+                return Response(result)
+            except EmptyPage:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'fail - index out of range'}
                 return create_json_response(error_header, error_header, status_code=200)
 
         except KeyError:
