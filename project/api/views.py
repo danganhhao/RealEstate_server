@@ -1625,8 +1625,8 @@ class MarkNotiAsRead(APIView):
                 return create_json_response(error_header, error_header, status_code=status_code)
 
             user_id = error_header['id']
-
-            noti_data = NotificationData.objects.get(userId=user_id, notificationId=notification_id)
+            notification_instance = Notification.objects.get(id=notification_id)
+            noti_data = NotificationData.objects.get(userId=user_id, notificationId=notification_instance)
             if noti_data:
                 noti_data.state = True
                 noti_data.save()
