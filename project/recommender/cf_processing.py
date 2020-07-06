@@ -268,7 +268,12 @@ def get_recommend(user_id, isGetPopularItem=False):
         return res
 
     else:
-        return res
+        if len(res) == 0 and isGetPopularItem:  # get popular item
+            top_rating_list = np.unravel_index(np.argsort(data_normalized.to_numpy().ravel())[-50:],
+                                               data_normalized.shape)
+            item_index = top_rating_list[0]
+            item_index = list(set(item_index))  # remove duplicate
+            return item_index
 
 
 def add_rating_data(new_data):
