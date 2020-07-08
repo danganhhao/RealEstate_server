@@ -301,3 +301,14 @@ class NotificationData(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+# Review table
+class Review(models.Model):
+    user = models.ForeignKey('user.User', on_delete=models.CASCADE)
+    estate = models.ForeignKey(Estate, on_delete=models.CASCADE)
+    content = models.TextField(max_length=5000)
+    timestamp = models.DateTimeField()
+
+    def __str__(self):
+        return str(self.id)
