@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
+from user.helper.string import ITEMS_PER_PAGE
+
 FILE_PATH_CF_DATA = "recommender/cf_data.csv"
 FILE_PATH_CF_DATA_NORMALIZED = "recommender/cf_data_normalized.csv"
 FILE_PATH_CF_ITEM_ID_INDEX = "recommender/cf_item_id_index.txt"
@@ -240,6 +242,16 @@ def check_user_exist_for_recommend(list_user, user_id):
         return -1
 
 
+def get_top_popular_items(data_normalized):
+    times_rating_of_each_item = []
+    total_users = data_normalized.shape[1]
+    for i in range(data_normalized.shape[0]):
+        value = total_users - list(data_normalized.iloc[i]).count(0.0)  # tính số lượng rating của 1 bất động sản
+        times_rating_of_each_item.append(value)
+    list_index = np.argsort(times_rating_of_each_item)[-ITEMS_PER_PAGE:]  # get top
+    return list_index
+
+
 def get_recommend(user_id, isGetPopularItem=False):
     """
         Return list item_id, it recommend for user_id
@@ -261,19 +273,12 @@ def get_recommend(user_id, isGetPopularItem=False):
         if len(res) != 0:
             return np_item_id_index[res]
         if len(res) == 0 and isGetPopularItem:  # get popular item
-            top_rating_list = np.unravel_index(np.argsort(data_normalized.to_numpy().ravel())[-50:], data_normalized.shape)
-            item_index = top_rating_list[0]
-            item_index = list(set(item_index))  # remove duplicate
-            return item_index
+            return get_top_popular_items(data_normalized)
         return res
 
     else:
         if len(res) == 0 and isGetPopularItem:  # get popular item
-            top_rating_list = np.unravel_index(np.argsort(data_normalized.to_numpy().ravel())[-50:],
-                                               data_normalized.shape)
-            item_index = top_rating_list[0]
-            item_index = list(set(item_index))  # remove duplicate
-            return item_index
+            return get_top_popular_items(data_normalized)
 
 
 def add_rating_data(new_data):
