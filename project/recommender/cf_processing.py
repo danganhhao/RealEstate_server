@@ -242,12 +242,21 @@ def check_user_exist_for_recommend(list_user, user_id):
         return -1
 
 
-def get_top_popular_items(data_normalized):
+def get_top_popular_items(data_origin):
     times_rating_of_each_item = []
-    total_users = data_normalized.shape[1]
-    for i in range(data_normalized.shape[0]):
-        value = total_users - list(data_normalized.iloc[i]).count(0.0)  # tính số lượng rating của 1 bất động sản
-        times_rating_of_each_item.append(value)
+    total_users = data_origin.shape[1]
+    for i in range(data_origin.shape[0]):
+        temp = (len(data_origin.iloc[i]) - np.count_nonzero(data_origin.iloc[i] == -1.0))
+        if temp != 0:
+            mean_value = sum(y for y in data_origin.iloc[i] if y != -1.0) / temp
+        else:
+            mean_value = 0
+
+        if mean_value >= 2.5:  # Chỉ chọn lọc những bất động sản có rating cao
+            value = total_users - list(data_origin.iloc[i]).count(-1.0)  # tính số lượng rating của 1 bất động sản
+            times_rating_of_each_item.append(value)
+        else:
+            times_rating_of_each_item.append(-1)
     list_index = np.argsort(times_rating_of_each_item)[-ITEMS_PER_PAGE:]  # get top
     return list_index
 
@@ -273,12 +282,12 @@ def get_recommend(user_id, isGetPopularItem=False):
         if len(res) != 0:
             return np_item_id_index[res]
         if len(res) == 0 and isGetPopularItem:  # get popular item
-            return get_top_popular_items(data_normalized)
+            return get_top_popular_items(data_origin)
         return res
 
     else:
         if len(res) == 0 and isGetPopularItem:  # get popular item
-            return get_top_popular_items(data_normalized)
+            return get_top_popular_items(data_origin)
 
 
 def add_rating_data(new_data):
