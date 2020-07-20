@@ -46,6 +46,7 @@ urlpatterns = [
     path('notification/registertoken/', FCMToken.as_view(), name='register_token'),
     path('notification/markasread/<int:notification_id>', MarkNotiAsRead.as_view(), name='mark_as_read'),
     path('notification/all/', NotificationInfo.as_view(), name='notification'),
+    path('review/', ReviewInfo.as_view(), name='review'),
     path('adddata/', AddData.as_view(), name='add_data'),
 
 ]

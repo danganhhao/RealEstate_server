@@ -449,3 +449,19 @@ class NewsSerializer(serializers.ModelSerializer):
         if news.newsType:
             return news.newsType.name
         return ""
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField('get_user')
+
+    class Meta:
+        model = Review
+        fields = ['id', 'user', 'content', 'timestamp']
+
+    def get_user(self, review):
+        if review.user:
+            result = {}
+            result['id'] = review.user.id
+            result['name'] = review.user.name
+            return result
+        return ""

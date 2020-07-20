@@ -27,22 +27,27 @@ class Authentication(BaseAuthentication):
 
         credential = {}
         try:
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-            credential = {'type': payload['type'], 'error_code': 1, 'error_message': 'Success'}
-            # handle token of login user
-            if payload['type'] == 'user':
-                username = payload['id']
-                email = payload['email']
+            user_token = UserToken.objects.filter(token=token.decode("utf-8"))
+            if user_token:
+                payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                credential = {'type': payload['type'], 'error_code': 1, 'error_message': 'Success'}
+                # handle token of login user
+                if payload['type'] == 'user':
+                    username = payload['id']
+                    email = payload['email']
 
-                user = User.objects.get(username=username, email=email)
-                credential['id'] = user.id
-                credential['username'] = user.username
-                credential['token'] = token
-            # For admin token
-            elif payload['type'] == 'admin' \
-                    or payload['type'] == 'reset-password' or payload['type'] == 'forgot-password':
+                    user = User.objects.get(username=username, email=email)
+                    credential['id'] = user.id
+                    credential['username'] = user.username
+                    credential['token'] = token
+                # For admin token
+                elif payload['type'] == 'admin' \
+                        or payload['type'] == 'reset-password' or payload['type'] == 'forgot-password':
 
-                return credential
+                    return credential
+            else:
+                credential['error_code'] = 0
+                credential['error_message'] = 'Invalid Token'
 
         except jwt.ExpiredSignatureError or jwt.DecodeError or jwt.InvalidIssuerError as e:
             credential['error_code'] = 0
