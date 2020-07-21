@@ -84,7 +84,7 @@ def normalize_price_param(value):
 def returnDefaultList():
     estate = Estate.objects.filter(isApproved=1).order_by('-id')[:25]
     serializer = EstateSerializer(estate, many=True)
-    return Response(serializer.data)
+    return serializer.data
 
 
 def returnWithParam(province_id, district_id, estateType_id):
@@ -102,35 +102,35 @@ def returnWithParam(province_id, district_id, estateType_id):
     if province_instance is not None and district_instance is None and estateType_instance is None:
         estate = Estate.objects.filter(isApproved=1, province=province_instance).order_by('-id')[:25]
         serializer = EstateSerializer(estate, many=True)
-        return Response(serializer.data)
+        return serializer.data
     if province_instance is None and district_instance is not None and estateType_instance is None:
         estate = Estate.objects.filter(isApproved=1, district=district_instance).order_by('-id')[:25]
         serializer = EstateSerializer(estate, many=True)
-        return Response(serializer.data)
+        return serializer.data
     if province_instance is None and district_instance is None and estateType_instance is not None:
         estate = Estate.objects.filter(isApproved=1, estateType=estateType_instance).order_by('-id')[:25]
         serializer = EstateSerializer(estate, many=True)
-        return Response(serializer.data)
+        return serializer.data
     if province_instance is not None and district_instance is not None and estateType_instance is None:
         estate = Estate.objects.filter(isApproved=1, province=province_instance,
                                        district=district_instance).order_by('-id')[:25]
         serializer = EstateSerializer(estate, many=True)
-        return Response(serializer.data)
+        return serializer.data
     if province_instance is not None and district_instance is None and estateType_instance is not None:
         estate = Estate.objects.filter(isApproved=1, province=province_instance,
                                        estateType=estateType_instance).order_by('-id')[:25]
         serializer = EstateSerializer(estate, many=True)
-        return Response(serializer.data)
+        return serializer.data
     if province_instance is None and district_instance is not None and estateType_instance is not None:
         estate = Estate.objects.filter(isApproved=1, district=district_instance,
                                        estateType=estateType_instance).order_by('-id')[:25]
         serializer = EstateSerializer(estate, many=True)
-        return Response(serializer.data)
+        return serializer.data
     if province_instance is not None and district_instance is not None and estateType_instance is not None:
         estate = Estate.objects.filter(isApproved=1, province=province_instance, district=district_instance,
                                        estateType=estateType_instance).order_by('-id')[:25]
         serializer = EstateSerializer(estate, many=True)
-        return Response(serializer.data)
+        return serializer.data
 
 
 def getOfferPostsForEachUser(m_id):
@@ -188,17 +188,17 @@ def getOfferPostsForEachUser(m_id):
                 estate = Estate.objects.filter(isApproved=1, province=province_instance, district=district_instance,
                                                estateType=estateType_instance).order_by('-id')[:25]
                 serializer = EstateSerializer(estate, many=True)
-                return Response(serializer.data)
+                return serializer.data
             if random == 1:
                 estate = Estate.objects.filter(isApproved=1, province=province_instance, district=district_instance,
                                                price__range=price_range).order_by('-id')[:25]
                 serializer = EstateSerializer(estate, many=True)
-                return Response(serializer.data)
+                return serializer.data
             if random == 2:
                 estate = Estate.objects.filter(isApproved=1, province=province_instance, district=district_instance,
                                                area__range=area_range).order_by('-id')[:25]
                 serializer = EstateSerializer(estate, many=True)
-                return Response(serializer.data)
+                return serializer.data
         else:
             return returnWithParam(province_id, district_instance, estateType_id)
     else:

@@ -1145,10 +1145,10 @@ class PostForYouInfoOld(APIView):  # Don't use
         try:
             error_header, status_code = Authentication().authentication(request, type_token='user')
             if error_header['error_code']:
-                return getOfferPostsForEachUser(error_header['id'])
+                return Response(getOfferPostsForEachUser(error_header['id']))
             device_id = request.GET.get('device_id', None)
             if isExistObject(device_id):
-                return getOfferPostsForEachUser(device_id)
+                return Response(getOfferPostsForEachUser(device_id))
 
             estate = Estate.objects.filter(isApproved=1).order_by('-id')[:25]
             serializer = EstateSerializer(estate, context={"request": request}, many=True)
@@ -1513,16 +1513,24 @@ class PostForYouInfo(APIView):
             # Get recommend with user_id
             error_header, status_code = Authentication().authentication(request, type_token='user')
             list_similar = []
+            list_offer_from_tracking = None
             if error_header['error_code']:
                 list_similar = get_recommend(error_header['id'], isGetPopularItem=True)[:ITEMS_PER_PAGE]
+                list_offer_from_tracking = getOfferPostsForEachUser(error_header['id'])
             else:  # Get recommend with device_id
                 device_id = self.convertToNumber(str(request.GET.get('device_id', None)))
                 if isExistObject(device_id):
                     list_similar = get_recommend(device_id, isGetPopularItem=True)[:ITEMS_PER_PAGE]
+                    list_offer_from_tracking = getOfferPostsForEachUser(request.GET.get('device_id', None))
 
             list_estate_info = Estate.objects.filter(id__in=list_similar)
             serializer = EstateSerializer(list_estate_info, many=True)
-            return Response(serializer.data)
+            total_list = serializer.data + list_offer_from_tracking
+            print("list_offer_from_tracking")
+            print(list_offer_from_tracking)
+            print("list_from_recommend")
+            print(serializer.data)
+            return Response(total_list)
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
             return create_json_response(error_header, error_header, status_code=200)
