@@ -1599,10 +1599,11 @@ class FCMToken(APIView):
             json_data = request.data
             token = json_data.get('token', None)
             user_instance = User.objects.get(id=user_id)
-            user_noti_token = UserNotiToken.objects.get(userId=user_instance)
+            user_noti_token = UserNotiToken.objects.filter(userId=user_instance)
             if user_noti_token:
-                user_noti_token.token = token
-                user_noti_token.save()
+                for item in user_noti_token:
+                    item.token = token
+                    item.save()
                 error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
                 return create_json_response(error_header, error_header, status_code=200)
 
