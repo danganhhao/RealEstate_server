@@ -94,10 +94,10 @@ class UserInfo(APIView):
             )
 
             if is_username_exist(user.username):
-                error_header = {'error_code': EC_EXIST, 'error_message': EM_EXIST + "username"}
+                error_header = {'error_code': EC_USERNAME_EXIST, 'error_message': EM_EXIST + "username"}
                 return create_json_response(error_header, error_header, status_code=200)
             elif is_email_exist(user.email):
-                error_header = {'error_code': EC_EXIST, 'error_message': EM_EXIST + "email"}
+                error_header = {'error_code': EC_EMAIL_EXIST, 'error_message': EM_EXIST + "email"}
                 return create_json_response(error_header, error_header, status_code=200)
 
             if avatar:
