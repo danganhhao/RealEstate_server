@@ -1511,11 +1511,12 @@ class PostForYouInfo(APIView):
 
             list_estate_info = Estate.objects.filter(id__in=list_similar)
             serializer = EstateSerializer(list_estate_info, many=True)
-            total_list = serializer.data + list_offer_from_tracking
-            print("list_offer_from_tracking")
-            print(list_offer_from_tracking)
-            print("list_from_recommend")
-            print(serializer.data)
+            lower_range_list = len(list_offer_from_tracking) if len(list_offer_from_tracking) < len(serializer.data) \
+                else len(serializer.data)
+            total_list = list_offer_from_tracking[:lower_range_list] + serializer.data[:lower_range_list]
+            print("lower_range_list", lower_range_list)
+            print("list_offer_from_tracking", list_offer_from_tracking[:lower_range_list])
+            print("list_from_recommend", serializer.data[:lower_range_list])
             return Response(total_list)
         except Exception as e:
             error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}

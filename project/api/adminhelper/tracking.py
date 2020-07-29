@@ -134,6 +134,7 @@ def returnWithParam(province_id, district_id, estateType_id):
 
 
 def getOfferPostsForEachUser(m_id):
+    result = []
     orderby = '-the_count'
     province_instance = None
     district_instance = None
@@ -188,17 +189,21 @@ def getOfferPostsForEachUser(m_id):
                 estate = Estate.objects.filter(isApproved=1, province=province_instance, district=district_instance,
                                                estateType=estateType_instance).order_by('-id')[:25]
                 serializer = EstateSerializer(estate, many=True)
-                return serializer.data
+                result = serializer.data
             if random == 1:
                 estate = Estate.objects.filter(isApproved=1, province=province_instance, district=district_instance,
                                                price__range=price_range).order_by('-id')[:25]
                 serializer = EstateSerializer(estate, many=True)
-                return serializer.data
+                result = serializer.data
             if random == 2:
                 estate = Estate.objects.filter(isApproved=1, province=province_instance, district=district_instance,
                                                area__range=area_range).order_by('-id')[:25]
                 serializer = EstateSerializer(estate, many=True)
-                return serializer.data
+                result = serializer.data
+            if len(result) == 0:
+                return returnWithParam(province_id, district_instance, estateType_id)
+            else:
+                return result
         else:
             return returnWithParam(province_id, district_instance, estateType_id)
     else:
