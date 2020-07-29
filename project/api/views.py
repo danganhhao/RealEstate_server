@@ -1000,7 +1000,8 @@ class SearchEngine(APIView):
             m_transaction = json_data.get('transaction', None)
             m_filter_max_price = json_data.get('filter_max_price', None)
             m_filter_min_price = json_data.get('filter_min_price', None)
-            m_filter_area = json_data.get('filter_area', None)
+            m_filter_min_area = json_data.get('filter_min_area', None)
+            m_filter_max_area = json_data.get('filter_max_area', None)
             m_filter_number_of_room = json_data.get('filter_number_of_room', None)
             m_filter_post_time = json_data.get('filter_post_time', None)
 
@@ -1027,36 +1028,21 @@ class SearchEngine(APIView):
                 if isExistObject(value):
                     estate = estate.filter(**{field: value})
 
-            # --------------- Filter with max price ---------------
-            if isExistObject(m_filter_max_price):
-                v = FilterMaxPrice.objects.get(id=m_filter_max_price).value
-                param = normalize_filter_max_price_param(v)
-                if isExistObject(param):
-                    estate = estate.filter(price__lte=param)
-
-            # --------------- Filter with min price ---------------
-            if isExistObject(m_filter_min_price):
-                v = FilterMinPrice.objects.get(id=m_filter_min_price).value
-                param = normalize_filter_min_price_param(v)
-                if isExistObject(param):
-                    estate = estate.filter(price__gte=param)
+            # --------------- Filter with price ---------------
+            if isExistObject(m_filter_min_price) and isExistObject(m_filter_max_price):
+                if int(m_filter_max_price) == -1:
+                    m_filter_max_price = MAX_INT
+                estate = estate.filter(price__range=(int(m_filter_min_price), int(m_filter_max_price)))
 
             # --------------- Filter with area ---------------
-            if isExistObject(m_filter_area):
-                v = FilterArea.objects.get(id=m_filter_area).value
-                param = normalize_filter_area_param(v)
-                if isExistObject(param):
-                    estate = estate.filter(area__range=(param[0], param[1]))
+            if isExistObject(m_filter_min_area) and isExistObject(m_filter_max_area):
+                if int(m_filter_max_area) == -1:
+                    m_filter_max_area = MAX_INT
+                estate = estate.filter(area__range=(int(m_filter_min_area), int(m_filter_max_area)))
 
             # --------------- Filter with number of room -----
             if isExistObject(m_filter_number_of_room):
-                v = FilterNumberOfRoom.objects.get(id=m_filter_number_of_room).value
-                param = normalize_filter_number_of_room_param(v)
-                if isExistObject(param):
-                    if param != -1:
-                        estate = estate.filter(numberOfRoom=param)
-                    else:
-                        estate = estate.filter(numberOfRoom__range=(6, MAX_INT))
+                estate = estate.filter(numberOfRoom__range=(int(m_filter_number_of_room), MAX_INT))
 
             # --------------- Filter with post time----------------
             if isExistObject(m_filter_post_time):
