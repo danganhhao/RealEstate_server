@@ -456,7 +456,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ['id', 'user', 'content', 'timestamp']
+        fields = ['id', 'user', 'content', 'rating', 'timestamp']
 
     def get_user(self, review):
         if review.user:

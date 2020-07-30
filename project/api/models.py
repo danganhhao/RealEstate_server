@@ -308,7 +308,27 @@ class Review(models.Model):
     user = models.ForeignKey('user.User', on_delete=models.CASCADE)
     estate = models.ForeignKey(Estate, on_delete=models.CASCADE)
     content = models.TextField(max_length=5000)
+    rating = models.IntegerField(default=0)
     timestamp = models.DateTimeField()
 
+    def __str__(self):
+        return str(self.id)
+
+
+# Rating type table
+class RatingType(models.Model):
+    name = models.TextField(max_length=30)
+    value = models.IntegerField()
+
+    def __str__(self):
+        return str(self.name)
+
+
+# Rating table
+class Rating(models.Model):
+    deviceId = models.CharField(max_length=100)  # user_id
+    estateId = models.CharField(max_length=100)
+    ratingType = models.ForeignKey(RatingType, on_delete=models.CASCADE)
+    
     def __str__(self):
         return str(self.id)

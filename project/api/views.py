@@ -1523,11 +1523,11 @@ class PostForYouInfo(APIView):
             return create_json_response(error_header, error_header, status_code=200)
 
 
-class Rating(APIView):
+class RatingInfo(APIView):
     parser_classes = (MultiPartParser,)
     """
         .../api/rating/
-        :param: device_id, item_id, rating score
+        :param: device_id, item_id, rating type
     """
 
     def convertToNumber(self, s):
@@ -1536,26 +1536,58 @@ class Rating(APIView):
     def post(self, request):
         try:
             json_data = request.data
-
-            # add rating with device_id
-            error_header, status_code = Authentication().authentication(request, type_token='user')
-            if error_header['error_code'] == 0:
-                device_id = self.convertToNumber(str(json_data.get('device_id', None)))
-                item_id = json_data.get('item_id', None)
-                rating = json_data.get('rating', None)
-
-                if isExistObject(device_id) and isExistObject(item_id) and isExistObject(rating):
-                    add_rating_data([int(device_id), int(item_id), int(rating)])
-                    error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
-                    return create_json_response(error_header, error_header, status_code=200)
-
-            # add rating with user_id
-            user_id = error_header['id']
             item_id = json_data.get('item_id', None)
-            rating = json_data.get('rating', None)
+            rating_type = json_data.get('rating_type', None)
 
-            if isExistObject(user_id) and isExistObject(item_id) and isExistObject(rating):
-                add_rating_data([int(user_id), int(item_id), int(rating)])
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            _id = None
+            if error_header['error_code'] == 0:
+                _id = self.convertToNumber(str(json_data.get('device_id', None)))
+            else:
+                _id = error_header['id']
+
+            if isExistObject(_id) and isExistObject(item_id) and isExistObject(rating_type):
+
+                # Add rate tracking
+                rating_type_instance = RatingType.objects.get(id=int(rating_type))
+                rating_obj = Rating.objects.filter(deviceId=int(_id), estateId=int(item_id),
+                                                   ratingType=rating_type_instance)
+                if rating_obj:
+                    rating_obj[0].ratingType = rating_type_instance
+                    rating_obj[0].save()
+                else:
+                    rate = Rating(
+                        deviceId=int(_id),
+                        estateId=int(item_id),
+                        ratingType=rating_type_instance
+                    )
+                    rate.save()
+
+                # Add rating to model
+                if error_header['error_code']: # Sử dụng user_id
+                    estate_instance = Estate.objects.get(id=item_id)
+                    user_instance = User.objects.get(id=_id)
+                    review = Review.objects.filter(user=user_instance, estate=estate_instance).exclude(rating=0)
+                    if review:  # Add rating trực quan
+                        _sum = 0
+                        for item in review:
+                            _sum = _sum + item.rating
+                        avg_rating = _sum / len(review)
+                        add_rating_data([int(_id), int(item_id), avg_rating])
+                    else:  # Add rating ngầm định
+                        rating_info = Rating.objects.filter(deviceId=int(_id), estateId=int(item_id))
+                        sum_rate = 0
+                        for r in rating_info:
+                            sum_rate = sum_rate + r.ratingType.value
+                        add_rating_data([int(_id), int(item_id), sum_rate])
+
+                else:  # Add rating ngầm định
+                    rating_info = Rating.objects.filter(deviceId=int(_id), estateId=int(item_id))
+                    sum_rate = 0
+                    for r in rating_info:
+                        sum_rate = sum_rate + r.ratingType.value
+                    add_rating_data([int(_id), int(item_id), sum_rate])
+
                 error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
                 return create_json_response(error_header, error_header, status_code=200)
 
@@ -1670,8 +1702,8 @@ class NotificationInfo(APIView):
                         'id': str(_item.notificationId.id),
                         'title': TITLE_NOTI,
                         'body': str("Bất động sản \"" + str(_item.notificationId.estateId.title) + "\" gần đây đã được "
-                                                                                                "cập nhật thông tin "
-                                                                                                "mới.",),
+                                                                                                   "cập nhật thông tin "
+                                                                                                   "mới.", ),
                         'estate_id': str(_item.notificationId.estateId.id),
                         'timestamp': str(_item.notificationId.timestamp),
                         'state': str(_item.state)
@@ -1703,6 +1735,7 @@ class ReviewInfo(APIView):
         .../api/review/
         :param: estate_id
     """
+
     def get(self, request):
         try:
             estate_id = request.GET.get('estate_id', None)
@@ -1730,15 +1763,25 @@ class ReviewInfo(APIView):
             json_data = request.data
             estate_id = json_data.get('estate_id', None)
             content = json_data.get('content', None)
+            rating = json_data.get('rating', None)
             estate_instance = Estate.objects.get(id=estate_id)
             user_instance = User.objects.get(id=user_id)
 
-            review = Review(
-                user=user_instance,
-                estate=estate_instance,
-                content=content,
-                timestamp=timezone.now()
-            )
+            if isExistObject(rating):
+                review = Review(
+                    user=user_instance,
+                    estate=estate_instance,
+                    content=content,
+                    rating=int(rating),
+                    timestamp=timezone.now()
+                )
+            else:
+                review = Review(
+                    user=user_instance,
+                    estate=estate_instance,
+                    content=content,
+                    timestamp=timezone.now()
+                )
             review.save()
 
             error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
