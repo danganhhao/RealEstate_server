@@ -1739,11 +1739,21 @@ class ReviewInfo(APIView):
     def get(self, request):
         try:
             estate_id = request.GET.get('estate_id', None)
+            page = request.GET.get('page', 1)
             estate_instance = Estate.objects.get(id=estate_id)
             review_data = Review.objects.filter(estate=estate_instance).order_by('-id')
-            serializer = ReviewSerializer(review_data, many=True)
-
-            return Response(serializer.data)
+            paginator = Paginator(review_data, ITEMS_PER_PAGE, allow_empty_first_page=True)
+            try:
+                review_sub = paginator.page(page)
+                serializer = ReviewSerializer(review_sub, many=True)
+                result = {}
+                result['current_page'] = str(page)
+                result['total_page'] = str(paginator.num_pages)
+                result['result'] = serializer.data
+                return Response(result)
+            except EmptyPage:
+                error_header = {'error_code': EC_FAIL, 'error_message': 'fail - index out of range'}
+                return create_json_response(error_header, error_header, status_code=200)
 
         except KeyError:
             error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
