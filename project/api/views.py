@@ -1784,6 +1784,18 @@ class ReviewInfo(APIView):
                 )
             review.save()
 
+            # Cập nhật điểm rating trung bình
+            review_info = Review.objects.filter(estate=estate_instance).exclude(rating=0)
+            avg_rating = 0
+            if review_info:
+                _sum = 0
+                for item in review_info:
+                    _sum = _sum + item.rating
+                avg_rating = _sum / len(review_info)
+
+            estate_instance.rating = avg_rating
+            estate_instance.save()
+
             error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
             return create_json_response(error_header, error_header, status_code=200)
 

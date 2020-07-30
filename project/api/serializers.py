@@ -97,7 +97,7 @@ class EstateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Estate
         fields = ['id', 'title', 'images', 'province', 'district', 'contact',
-                  'project', 'transaction', 'area', 'price', 'created_day', 'lat', 'lng']
+                  'project', 'transaction', 'area', 'price', 'created_day', 'lat', 'lng', 'rating']
 
     # def get_a_image(self, estate):
     #     img = EstateImage.objects.filter(estate=estate.id).first()
@@ -146,7 +146,7 @@ class EstateDetailSerializer(serializers.ModelSerializer):
         model = Estate
         fields = ['id', 'images', 'estateType', 'project', 'transaction', 'province', 'district', 'ward', 'street',
                   'addressDetail', 'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact',
-                  'lat', 'lng']
+                  'lat', 'lng', 'rating']
         # fields = '__all__'
 
     def get_estateType(self, estate):
@@ -210,7 +210,7 @@ class EstateDetailForIsApprovedSerializer(serializers.ModelSerializer):  # only 
         model = Estate
         fields = ['id', 'images', 'estateType', 'project', 'transaction', 'province', 'district', 'ward', 'street',
                   'addressDetail', 'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact',
-                  'lat', 'lng', 'isApproved']
+                  'lat', 'lng', 'rating', 'isApproved']
         # fields = '__all__'
 
     def get_estateType(self, estate):
@@ -273,7 +273,7 @@ class EstateDetailForCurrentUserSerializer(serializers.ModelSerializer):
         model = Estate
         fields = ['id', 'images', 'estateType', 'project', 'transaction', 'province', 'district', 'ward', 'street',
                   'addressDetail', 'title', 'numberOfRoom', 'description', 'detail', 'price', 'area', 'contact',
-                  'lat', 'lng', 'isApproved']
+                  'lat', 'lng', 'rating', 'isApproved']
 
     def get_estateType(self, estate):
         if estate.estateType:

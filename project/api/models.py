@@ -140,6 +140,7 @@ class Estate(models.Model):
     created_day = models.DateTimeField()
     lat = models.FloatField(default=0)
     lng = models.FloatField(default=0)
+    rating = models.FloatField(default=0)
     isApproved = models.IntegerField(default=2)
 
     def __str__(self):
