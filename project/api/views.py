@@ -26,7 +26,7 @@ from api.adminhelper.tracking import *
 
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.utils import timezone
-from django.db.models import Count
+from django.db.models import Count, Sum
 
 import csv
 
@@ -1579,6 +1579,7 @@ class RatingInfo(APIView):
                         sum_rate = 0
                         for r in rating_info:
                             sum_rate = sum_rate + r.ratingType.value
+                        sum_rate = sum_rate * 5 / 7
                         add_rating_data([int(_id), int(item_id), sum_rate])
 
                 else:  # Add rating ngầm định
