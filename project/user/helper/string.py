@@ -19,6 +19,7 @@ DN_ID = 3
 BD_ID = 4
 
 TITLE_NOTI = u'Bất động sản bạn quan tâm đã thay đổi thông tin, xem ngay!'
+TITLE_NOTI_TODO = u'Có bất động sản phù hợp với bạn, xem ngay!'
 
 HCM_NAME = u'Hồ Chí Minh'
 HN_NAME = u'Hà Nội'

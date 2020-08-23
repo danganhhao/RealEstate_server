@@ -465,3 +465,28 @@ class ReviewSerializer(serializers.ModelSerializer):
             result['name'] = review.user.name
             return result
         return ""
+
+
+class TodolistSerializer(serializers.ModelSerializer):
+    estateType = serializers.SerializerMethodField('get_estateType')
+    province = serializers.SerializerMethodField('get_province')
+    district = serializers.SerializerMethodField('get_district')
+
+    class Meta:
+        model = Todolist
+        fields = ['id', 'estateType', 'province', 'district']
+
+    def get_estateType(self, estate):
+        if estate.estateType:
+            return estate.estateType.name
+        return ""
+
+    def get_province(self, estate):
+        if estate.province:
+            return estate.province.name
+        return ""
+
+    def get_district(self, estate):
+        if estate.district:
+            return estate.district.name
+        return ""

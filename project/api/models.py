@@ -280,6 +280,7 @@ class Tracking(models.Model):
 class Notification(models.Model):
     estateId = models.ForeignKey(Estate, on_delete=models.CASCADE, null=True, blank=True)
     timestamp = models.DateTimeField()
+    noti_type = models.IntegerField()
 
     def __str__(self):
         return str(self.id)
@@ -333,3 +334,15 @@ class Rating(models.Model):
     
     def __str__(self):
         return str(self.id)
+
+
+# Todolist table
+class Todolist(models.Model):
+    user = models.ForeignKey('user.User', on_delete=models.CASCADE)
+    estateType = models.ForeignKey(EstateType, on_delete=models.CASCADE)
+    province = models.ForeignKey(Province, on_delete=models.CASCADE, null=True, blank=True)
+    district = models.ForeignKey(District, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str(self):
+        return str(self.user.name)
+

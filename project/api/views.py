@@ -14,7 +14,7 @@ from rest_framework.response import Response
 
 from api.models import *
 from api.serializers import *
-from api.utils import send_notification
+from api.utils import send_notification, check_todo_and_send_notification
 from recommender.cf_processing import add_rating_data, get_recommend
 from recommender.processing import get_similar_items
 from user.helper.authentication import Authentication
@@ -491,6 +491,8 @@ class PostInfo(APIView):
                     dateTo=(timezone.now() + timezone.timedelta(days=expireDays))
                 )
                 new_post.save()
+
+                check_todo_and_send_notification(estate_id, estateType_instance, province_instance, district_instance)
 
                 error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
                 return create_json_response(error_header, error_header, status_code=200)
@@ -1699,14 +1701,19 @@ class NotificationInfo(APIView):
                 noti_data_sub_obj = paginator.page(page)
                 data = []
                 for _item in noti_data_sub_obj:
+                    if _item.notificationId.estateId.noti_type == 1:
+                        mess_body = str("Bất động sản \"" + str(_item.notificationId.estateId.title) + "\" gần đây đã được "
+                                                                                                   "cập nhật thông tin "
+                                                                                                   "mới.", )
+                    else:
+                        mess_body = "Bất động sản vừa đăng phù hợp với bạn."
                     item = {
                         'id': str(_item.notificationId.id),
                         'title': TITLE_NOTI,
-                        'body': str("Bất động sản \"" + str(_item.notificationId.estateId.title) + "\" gần đây đã được "
-                                                                                                   "cập nhật thông tin "
-                                                                                                   "mới.", ),
+                        'body': mess_body,
                         'estate_id': str(_item.notificationId.estateId.id),
                         'timestamp': str(_item.notificationId.timestamp),
+                        'noti_type': str(_item.notificationId.noti_type),
                         'state': str(_item.state)
                     }
                     data.append(item)
@@ -1806,6 +1813,94 @@ class ReviewInfo(APIView):
 
             estate_instance.rating = avg_rating
             estate_instance.save()
+
+            error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+
+# Todolist info
+class TodolistInfo(APIView):
+    parser_classes = (MultiPartParser,)
+    """
+        .../api/todo/
+        :param: 
+    """
+
+    def get(self, request):
+        try:
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            user_id = error_header['id']
+            user_instance = User.objects.get(id=user_id)
+            todo = Todolist.objects.filter(user=user_instance).order_by('-id')
+            serializer = TodolistSerializer(todo, many=True)
+            return Response(serializer.data)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+    def post(self, request):
+        try:
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            user_id = error_header['id']
+            json_data = request.data
+            estateType = json_data.get('estateType')  # required
+            province = json_data.get('province')  # required
+            district = json_data.get('district')  # required
+            user_instance = User.objects.get(id=user_id)
+            estateType_instance = EstateType.objects.get(id=estateType)
+            province_instance = Province.objects.get(id=province)
+            district_instance = District.objects.get(id=district)
+
+            todo = Todolist(
+                user=user_instance,
+                estateType=estateType_instance,
+                province=province_instance,
+                district=district_instance
+            )
+            todo.save()
+
+            error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except KeyError:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'Missing require fields'}
+            return create_json_response(error_header, error_header, status_code=200)
+
+        except Exception as e:
+            error_header = {'error_code': EC_FAIL, 'error_message': 'fail - ' + str(e)}
+            return create_json_response(error_header, error_header, status_code=200)
+
+    def delete(self, request):
+        try:
+            error_header, status_code = Authentication().authentication(request, type_token='user')
+            if error_header['error_code'] == 0:
+                return create_json_response(error_header, error_header, status_code=status_code)
+
+            user_id = error_header['id']
+            user_instance = User.objects.get(id=user_id)
+            json_data = request.data
+            todo_id = json_data.get('todo_id')  # required
+            todo = Todolist.objects.get(id=todo_id, user=user_instance)
+            todo.delete()
 
             error_header = {'error_code': EC_SUCCESS, 'error_message': EM_SUCCESS}
             return create_json_response(error_header, error_header, status_code=200)
