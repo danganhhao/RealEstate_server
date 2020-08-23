@@ -1701,7 +1701,7 @@ class NotificationInfo(APIView):
                 noti_data_sub_obj = paginator.page(page)
                 data = []
                 for _item in noti_data_sub_obj:
-                    if _item.notificationId.estateId.noti_type == 1:
+                    if _item.notificationId.noti_type == 1:
                         mess_body = str("Bất động sản \"" + str(_item.notificationId.estateId.title) + "\" gần đây đã được "
                                                                                                    "cập nhật thông tin "
                                                                                                    "mới.", )
