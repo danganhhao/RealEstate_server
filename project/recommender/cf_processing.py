@@ -2,12 +2,14 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
-from user.helper.string import ITEMS_PER_PAGE
+ITEMS_PER_PAGE = 25
+LIMIT_TO_TRAIN = 1000
 
 FILE_PATH_CF_DATA = "recommender/cf_data.csv"
 FILE_PATH_CF_DATA_NORMALIZED = "recommender/cf_data_normalized.csv"
 FILE_PATH_CF_ITEM_ID_INDEX = "recommender/cf_item_id_index.txt"
 FILE_PATH_CF_USER_ID_INDEX = "recommender/cf_user_id_index.txt"
+FILE_PATH_TRAIN_TRIGGER = "recommender/train_trigger.txt"
 
 
 class CF(object):
@@ -290,6 +292,24 @@ def get_recommend(user_id, isGetPopularItem=False):
             return get_top_popular_items(data_origin)
 
 
+def read_number_of_new_review():
+    with open(FILE_PATH_TRAIN_TRIGGER, 'r') as f:
+        data = f.readlines()
+        data = list(map(int, data))
+        return data[0], data[1]
+
+
+def storage_number_of_new_review(cur_review, number_review_need_to_train):
+    with open(FILE_PATH_TRAIN_TRIGGER, 'w') as f:
+        f.write("%s\n" % cur_review)
+        f.write("%s\n" % number_review_need_to_train)
+
+
+def update_tracking_to_retrain():
+    cur_review, number_review_need_to_train = read_number_of_new_review()
+    storage_number_of_new_review(cur_review + 1, number_review_need_to_train)
+
+
 def add_rating_data(new_data):
     """
         Param: new_data is a list (new_data = [user_id, item_id, rating])
@@ -300,6 +320,8 @@ def add_rating_data(new_data):
     rs = CF(data, user_id_index, item_id_index, 2)
     rs.add(new_data)
     rs.export_added_rating()
+    # Update tracking to retrain
+    update_tracking_to_retrain()
 
 
 def train():
@@ -313,6 +335,17 @@ def train():
     rs.export_normalized()
 
 
-train()
+def tracking_to_retrain_model():
+    cur_review, number_review_need_to_train = read_number_of_new_review()
+    if cur_review > number_review_need_to_train:
+        train()
+        storage_number_of_new_review(cur_review, int(cur_review / LIMIT_TO_TRAIN) * LIMIT_TO_TRAIN + LIMIT_TO_TRAIN)
+        print("Retrain model!!!!")
+    else:
+        print("NOT retrain model!!!!")
+
+
+# train()
+tracking_to_retrain_model()
 # add_rating_data([200, 100, 56.3333333])
 # print(get_recommend(205))
