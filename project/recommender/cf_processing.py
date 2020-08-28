@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from multiprocessing import Process
 
 ITEMS_PER_PAGE = 25
 LIMIT_TO_TRAIN = 1000
@@ -305,9 +306,26 @@ def storage_number_of_new_review(cur_review, number_review_need_to_train):
         f.write("%s\n" % number_review_need_to_train)
 
 
+def train():
+    """
+        Train models when have new information.
+    """
+    data, item_id_index, user_id_index = read_data_for_train(FILE_PATH_CF_DATA, FILE_PATH_CF_ITEM_ID_INDEX,
+                                                             FILE_PATH_CF_USER_ID_INDEX)
+    rs = CF(data, user_id_index, item_id_index, 2)
+    rs.fit()
+    rs.export_normalized()
+
+
 def update_tracking_to_retrain():
     cur_review, number_review_need_to_train = read_number_of_new_review()
-    storage_number_of_new_review(cur_review + 1, number_review_need_to_train)
+    if cur_review > number_review_need_to_train:
+        train()
+        storage_number_of_new_review(cur_review + 1, int(cur_review / LIMIT_TO_TRAIN) * LIMIT_TO_TRAIN + LIMIT_TO_TRAIN)
+        print("Retrain model!!!!")
+    else:
+        storage_number_of_new_review(cur_review + 1, number_review_need_to_train)
+        print("NOT retrain model!!!!")
 
 
 def add_rating_data(new_data):
@@ -321,18 +339,10 @@ def add_rating_data(new_data):
     rs.add(new_data)
     rs.export_added_rating()
     # Update tracking to retrain
-    update_tracking_to_retrain()
-
-
-def train():
-    """
-        Train models when have new information.
-    """
-    data, item_id_index, user_id_index = read_data_for_train(FILE_PATH_CF_DATA, FILE_PATH_CF_ITEM_ID_INDEX,
-                                                             FILE_PATH_CF_USER_ID_INDEX)
-    rs = CF(data, user_id_index, item_id_index, 2)
-    rs.fit()
-    rs.export_normalized()
+    # update_tracking_to_retrain()
+    proc = Process(target=update_tracking_to_retrain)
+    proc.start()
+    # proc.join()
 
 
 def tracking_to_retrain_model():
@@ -346,6 +356,6 @@ def tracking_to_retrain_model():
 
 
 # train()
-tracking_to_retrain_model()
+# tracking_to_retrain_model()
 # add_rating_data([200, 100, 56.3333333])
 # print(get_recommend(205))
